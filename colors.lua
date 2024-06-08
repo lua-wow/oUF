@@ -86,7 +86,9 @@ local colors = {
 		[13] = oUF:CreateColor(0, 153, 0), -- BATTLEGROUND_FRIENDLY_PVP
 	},
 	class = {},
-	debuff = {},
+	debuff = {
+		["Stealable"] = oUF:CreateColor(0.93, 0.91, 0.55)
+	},
 	reaction = {},
 	power = {},
 	threat = {},
