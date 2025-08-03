@@ -67,6 +67,7 @@ read_globals = {
 	'GetRaidTargetIndex',
 	'GetReadyCheckStatus',
 	'GetRuneCooldown',
+	'GetInspectSpecialization',
 	'GetSpecialization',
 	'GetSpecializationInfoByID',
 	'GetSpellPowerCost',

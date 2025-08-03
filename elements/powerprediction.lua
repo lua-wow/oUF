@@ -42,9 +42,10 @@ A default texture will be applied if the widget is a StatusBar and doesn't have 
 
 local _, ns = ...
 local oUF = ns.oUF
+local Private = ns.oUF.Private
 
 -- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
-local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = Private.GetAltPowerBarDisplayInfo()
 
 local ADDITIONAL_POWER_BAR_INDEX = 0
 
@@ -79,8 +80,7 @@ local function Update(self, event, unit)
 
 	local _, _, _, startTime, endTime, _, _, _, spellID = UnitCastingInfo(unit)
 	local mainPowerType = UnitPowerType(unit)
-	local hasAltManaBar = ALT_POWER_BAR_PAIR_DISPLAY_INFO[playerClass]
-		and ALT_POWER_BAR_PAIR_DISPLAY_INFO[playerClass][mainPowerType]
+	local hasAltManaBar = Private.HasAltPowerBar(playerClass, mainPowerType)
 	local mainCost, altCost = 0, 0
 
 	if(event == 'UNIT_SPELLCAST_START' and startTime ~= endTime) then

@@ -114,11 +114,13 @@ local _, ns = ...
 local oUF = ns.oUF
 local Private = oUF.Private
 
-local unitSelectionType = Private.unitSelectionType
+local UnitSelectionColor = Private.UnitSelectionColor
 
 local function UpdateColor(self, event, unit)
 	if(not unit or self.unit ~= unit) then return end
 	local element = self.Health
+
+	local selectionColor = UnitSelectionColor(unit, element.considerSelectionInCombatHostile)
 
 	local r, g, b, color
 	if(element.colorDisconnected and not UnitIsConnected(unit)) then
@@ -132,8 +134,8 @@ local function UpdateColor(self, event, unit)
 		or (element.colorClassPet and UnitPlayerControlled(unit) and not UnitIsPlayer(unit)) then
 		local _, class = UnitClass(unit)
 		color = self.colors.class[class]
-	elseif(element.colorSelection and unitSelectionType(unit, element.considerSelectionInCombatHostile)) then
-		color = self.colors.selection[unitSelectionType(unit, element.considerSelectionInCombatHostile)]
+	elseif(element.colorSelection and selectionColor) then
+		color = selectionColor
 	elseif(element.colorReaction and UnitReaction(unit, 'player')) then
 		color = self.colors.reaction[UnitReaction(unit, 'player')]
 	elseif(element.colorSmooth) then
@@ -208,7 +210,7 @@ local function Update(self, event, unit)
 	element.max = max
 
 	local lossPerc = 0
-	if(element.TempLoss) then
+	if(element.TempLoss and GetUnitTotalModifiedMaxHealthPercent) then
 		lossPerc = Clamp(GetUnitTotalModifiedMaxHealthPercent(unit), 0, 1)
 
 		element.TempLoss:SetValue(lossPerc)

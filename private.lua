@@ -1,6 +1,19 @@
 local _, ns = ...
 local Private = ns.oUF.Private
 
+-- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {
+	DRUID = {
+		[Enum.PowerType.LunarPower] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+	PRIEST = {
+		[Enum.PowerType.Insanity] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+	SHAMAN = {
+		[Enum.PowerType.Maelstrom] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+}
+
 function Private.argcheck(value, num, ...)
 	assert(type(num) == 'number', "Bad argument #2 to 'argcheck' (number expected, got " .. type(num) .. ')')
 
@@ -41,29 +54,12 @@ function Private.validateUnit(unit)
 	end
 end
 
-local selectionTypes = {
-	[ 0] = 0,
-	[ 1] = 1,
-	[ 2] = 2,
-	[ 3] = 3,
-	[ 4] = 4,
-	[ 5] = 5,
-	[ 6] = 6,
-	[ 7] = 7,
-	[ 8] = 8,
-	[ 9] = 9,
-	-- [10] = 10, -- unavailable to players
-	-- [11] = 11, -- unavailable to players
-	-- [12] = 12, -- inconsistent due to bugs and its reliance on cvars
-	[13] = 13,
-}
-
-function Private.unitSelectionType(unit, considerHostile)
-	if(considerHostile and UnitThreatSituation('player', unit)) then
-		return 0
-	else
-		return selectionTypes[UnitSelectionType(unit, true)]
+function Private.UnitSelectionColor(unit, useExtendedColors)
+	local r, g, b, a = UnitSelectionColor(unit, useExtendedColors)
+	if not r or not g or not b then
+		return nil
 	end
+	return ns.oUF:CreateColor(r, g, b, a or 1)
 end
 
 function Private.xpcall(func, ...)
@@ -86,4 +82,12 @@ function Private.isUnitEvent(event, unit)
 	end
 
 	return isOK
+end
+
+function Private.GetAltPowerBarDisplayInfo()
+	return ALT_POWER_BAR_PAIR_DISPLAY_INFO
+end
+
+function Private.HasAltPowerBar(class, powerType)
+	return ALT_POWER_BAR_PAIR_DISPLAY_INFO[class] and ALT_POWER_BAR_PAIR_DISPLAY_INFO[class][powerType]
 end

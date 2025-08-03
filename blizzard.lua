@@ -1,6 +1,9 @@
 local _, ns = ...
 local oUF = ns.oUF
 
+-- sourced from Blizzard_ArenaUI/Blizzard_ArenaUI.lua
+local MAX_ARENA_ENEMIES = _G.MAX_ARENA_ENEMIES or 5
+
 -- sourced from Blizzard_UnitFrame/TargetFrame.lua
 local MAX_BOSS_FRAMES = 8 -- blizzard can spawn more than the default 5 apparently
 
@@ -132,28 +135,31 @@ function oUF:DisableBlizzard(unit)
 			end
 		end
 	elseif(unit:match('party%d?$')) then
-		if(not isPartyHooked) then
-			isPartyHooked = true
-
-			handleFrame(PartyFrame)
-
-			for frame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
-				handleFrame(frame, true)
-			end
-
-			for i = 1, MEMBERS_PER_RAID_GROUP do
-				handleFrame('CompactPartyFrameMember' .. i)
+		local id = unit:match('party(%d)')
+		if (id) then
+			handleFrame('PartyMemberFrame' .. id)
+		else
+			for i = 1, MAX_PARTY_MEMBERS do
+				handleFrame(string.format('PartyMemberFrame%d', i))
 			end
 		end
 	elseif(unit:match('arena%d?$')) then
-		if(not isArenaHooked) then
-			isArenaHooked = true
-
-			handleFrame(CompactArenaFrame)
-
-			for _, frame in next, CompactArenaFrame.memberUnitFrames do
-				handleFrame(frame, true)
+		local id = unit:match('arena(%d)')
+		if (id) then
+			handleFrame('ArenaEnemyFrame' .. id)
+		else
+			for i = 1, MAX_ARENA_ENEMIES do
+				handleFrame(string.format('ArenaEnemyFrame%d', i))
 			end
+		end
+
+		-- Blizzard_ArenaUI should not be loaded
+		Arena_LoadUI = function() end
+		SetCVar('showArenaEnemyFrames', '0', 'SHOW_ARENA_ENEMY_FRAMES_TEXT')
+	elseif(unit:match('nameplate%d+$')) then
+		local frame = C_NamePlate.GetNamePlateForUnit(unit)
+		if(frame and frame.UnitFrame) then
+			handleFrame(frame.UnitFrame)
 		end
 	end
 end

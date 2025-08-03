@@ -22,7 +22,6 @@ If the sub-widgets are StatusBars, their minimum and maximum values will be set 
 
 Supported class powers:
   - All     - Combo Points
-  - Evoker  - Essence
   - Mage    - Arcane Charges
   - Monk    - Chi Orbs
   - Paladin - Holy Power
@@ -50,6 +49,9 @@ local oUF = ns.oUF
 
 local _, PlayerClass = UnitClass('player')
 
+-- Blizzard
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
 local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
 local SPEC_MONK_WINDWALKER = _G.SPEC_MONK_WINDWALKER or 3
@@ -61,7 +63,6 @@ local SPELL_POWER_SOUL_SHARDS = Enum.PowerType.SoulShards or 7
 local SPELL_POWER_HOLY_POWER = Enum.PowerType.HolyPower or 9
 local SPELL_POWER_CHI = Enum.PowerType.Chi or 12
 local SPELL_POWER_ARCANE_CHARGES = Enum.PowerType.ArcaneCharges or 16
-local SPELL_POWER_ESSENCE = Enum.PowerType.Essence or 19
 
 -- Holds the class specific stuff.
 local ClassPowerID, ClassPowerType
@@ -112,13 +113,12 @@ local function Update(self, event, unit, powerType)
 		element:PreUpdate()
 	end
 
-	local cur, max, mod, oldMax, chargedPoints
+	local cur, max, mod, oldMax
 	if(event ~= 'ClassPowerDisable') then
 		local powerID = unit == 'vehicle' and SPELL_POWER_COMBO_POINTS or ClassPowerID
 		cur = UnitPower(unit, powerID, true)
 		max = UnitPowerMax(unit, powerID)
 		mod = UnitPowerDisplayMod(powerID)
-		chargedPoints = GetUnitChargedPowerPoints(unit)
 
 		-- UNIT_POWER_POINT_CHARGE doesn't provide a power type
 		powerType = powerType or ClassPowerType
@@ -162,10 +162,9 @@ local function Update(self, event, unit, powerType)
 	* max           - the maximum amount of power (number)
 	* hasMaxChanged - indicates whether the maximum amount has changed since the last update (boolean)
 	* powerType     - the active power type (string)
-	* ...           - the indices of currently charged power points, if any
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(cur, max, oldMax ~= max, powerType, unpack(chargedPoints or {}))
+		return element:PostUpdate(cur, max, oldMax ~= max, powerType)
 	end
 end
 
@@ -186,10 +185,10 @@ local function Visibility(self, event, unit)
 	local shouldEnable
 
 	if(UnitHasVehicleUI('player')) then
-		shouldEnable = PlayerVehicleHasComboPoints()
+		shouldEnable = PlayerVehicleHasComboPoints and PlayerVehicleHasComboPoints() or false
 		unit = 'vehicle'
 	elseif(ClassPowerID) then
-		if(not RequireSpec or RequireSpec == GetSpecialization()) then
+		if(not RequireSpec or RequireSpec == GetInspectSpecialization('player')) then
 			-- use 'player' instead of unit because 'SPELLS_CHANGED' is a unitless event
 			if(not RequirePower or RequirePower == UnitPowerType('player')) then
 				if(not RequireSpell or IsPlayerSpell(RequireSpell)) then
@@ -259,9 +258,6 @@ do
 		self:RegisterEvent('UNIT_MAXPOWER', Path)
 		self:RegisterEvent('UNIT_POWER_UPDATE', Path)
 
-		-- according to Blizz any class may receive this event due to specific spell auras
-		self:RegisterEvent('UNIT_POWER_POINT_CHARGE', Path)
-
 		self.ClassPower.__isEnabled = true
 
 		if(UnitHasVehicleUI('player')) then
@@ -274,7 +270,6 @@ do
 	function ClassPowerDisable(self)
 		self:UnregisterEvent('UNIT_POWER_UPDATE', Path)
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
-		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
 
 		local element = self.ClassPower
 		for i = 1, #element do
@@ -288,7 +283,6 @@ do
 	if(PlayerClass == 'MONK') then
 		ClassPowerID = SPELL_POWER_CHI
 		ClassPowerType = 'CHI'
-		RequireSpec = SPEC_MONK_WINDWALKER
 	elseif(PlayerClass == 'PALADIN') then
 		ClassPowerID = SPELL_POWER_HOLY_POWER
 		ClassPowerType = 'HOLY_POWER'
@@ -307,9 +301,6 @@ do
 		ClassPowerID = SPELL_POWER_ARCANE_CHARGES
 		ClassPowerType = 'ARCANE_CHARGES'
 		RequireSpec = SPEC_MAGE_ARCANE
-	elseif(PlayerClass == 'EVOKER') then
-		ClassPowerID = SPELL_POWER_ESSENCE
-		ClassPowerType = 'ESSENCE'
 	end
 end
 

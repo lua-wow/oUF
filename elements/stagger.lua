@@ -34,6 +34,9 @@ if(select(2, UnitClass('player')) ~= 'MONK') then return end
 local _, ns = ...
 local oUF = ns.oUF
 
+-- Blizzard
+local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
+
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
 local SPEC_MONK_BREWMASTER = _G.SPEC_MONK_BREWMASTER or 1
 
