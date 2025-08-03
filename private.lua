@@ -41,29 +41,12 @@ function Private.validateUnit(unit)
 	end
 end
 
-local selectionTypes = {
-	[ 0] = 0,
-	[ 1] = 1,
-	[ 2] = 2,
-	[ 3] = 3,
-	[ 4] = 4,
-	[ 5] = 5,
-	[ 6] = 6,
-	[ 7] = 7,
-	[ 8] = 8,
-	[ 9] = 9,
-	-- [10] = 10, -- unavailable to players
-	-- [11] = 11, -- unavailable to players
-	-- [12] = 12, -- inconsistent due to bugs and its reliance on cvars
-	[13] = 13,
-}
-
-function Private.unitSelectionType(unit, considerHostile)
-	if(considerHostile and UnitThreatSituation('player', unit)) then
-		return 0
-	else
-		return selectionTypes[UnitSelectionType(unit, true)]
+function Private.UnitSelectionColor(unit, useExtendedColors)
+	local r, g, b, a = UnitSelectionColor(unit, useExtendedColors)
+	if not r or not g or not b then
+		return nil
 	end
+	return ns.oUF:CreateColor(r, g, b, a or 1)
 end
 
 function Private.xpcall(func, ...)

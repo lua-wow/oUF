@@ -1,5 +1,6 @@
 local parent, ns = ...
-local global = C_AddOns.GetAddOnMetadata(parent, 'X-oUF')
+local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+local global = GetAddOnMetadata(parent, 'X-oUF')
 local _VERSION = '@project-version@'
 if(_VERSION:find('project%-version')) then
 	_VERSION = 'devel'
@@ -304,6 +305,16 @@ local function initObject(unit, style, styleFunc, header, ...)
 			object:SetAttribute('*type2', 'togglemenu')
 			object:SetAttribute('toggleForVehicle', true)
 
+			--[[ frame.IsPingable
+			This boolean can be set to false to disable the frame from being pingable. Enabled by default.
+			--]]
+			--[[ Override: frame:GetContextualPingType()
+			Used to define which contextual ping is used for the frame.
+
+			By default this wraps `C_Ping.GetContextualPingTypeForUnit(UnitGUID(frame.unit))`.
+			--]]
+			object:SetAttribute('ping-receiver', true)
+
 			if(isEventlessUnit(objectUnit)) then
 				oUF:HandleEventlessUnit(object)
 			else
@@ -596,6 +607,8 @@ do
 				frame:SetAttribute('*type1', 'target')
 				frame:SetAttribute('*type2', 'togglemenu')
 				frame:SetAttribute('oUF-guessUnit', unit)
+
+				frame:SetAttribute('ping-receiver', true)
 			end
 
 			local body = header:GetAttribute('oUF-initialConfigFunction')
@@ -626,7 +639,7 @@ do
 	                 for possible values. If preferred, the attributes can be an associative table.
 
 	In addition to the standard group headers, oUF implements some of its own attributes. These can be supplied by the
-	layout, but are optional. PingableUnitFrameTemplate is inherited for Ping support.
+	layout, but are optional.
 
 	* oUF-initialConfigFunction - can contain code that will be securely run at the end of the initial secure
 	                              configuration (string?)
@@ -641,7 +654,7 @@ do
 		local name = overrideName or generateName(nil, ...)
 		local header = CreateFrame('Frame', name, PetBattleFrameHider, template)
 
-		header:SetAttribute('template', 'SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate, PingableUnitFrameTemplate')
+		header:SetAttribute('template', 'SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate')
 
 		if(...) then
 			if(type(...) == 'table') then
@@ -729,8 +742,7 @@ Used to create a single unit frame and apply the currently active style to it.
 * overrideName - unique global name to use for the unit frame. Defaults to an auto-generated name based on the unit
                  (string?)
 
-oUF implements some of its own attributes. These can be supplied by the layout, but are optional.  
-PingableUnitFrameTemplate is inherited for Ping support.
+oUF implements some of its own attributes. These can be supplied by the layout, but are optional.
 
 * oUF-enableArenaPrep - can be used to toggle arena prep support. Defaults to true (boolean)
 --]]
@@ -741,7 +753,7 @@ function oUF:Spawn(unit, overrideName)
 	unit = unit:lower()
 
 	local name = overrideName or generateName(unit)
-	local object = CreateFrame('Button', name, PetBattleFrameHider, 'SecureUnitButtonTemplate, PingableUnitFrameTemplate')
+	local object = CreateFrame('Button', name, PetBattleFrameHider, 'SecureUnitButtonTemplate')
 	Private.UpdateUnits(object, unit)
 
 	self:DisableBlizzard(unit)
@@ -762,8 +774,6 @@ Used to create nameplates and apply the currently active style to them.
               the callback are the updated nameplate, if any, the event that triggered the update, and the new unit
               (function?)
 * variables - list of console variable-value pairs to be set when the player logs in (table?)
-
-PingableUnitFrameTemplate is inherited for Ping support.
 --]]
 function oUF:SpawnNamePlates(namePrefix, nameplateCallback, nameplateCVars)
 	argcheck(nameplateCallback, 3, 'function', 'nil')
@@ -813,6 +823,18 @@ function oUF:SpawnNamePlates(namePrefix, nameplateCallback, nameplateCVars)
 			if(nameplate) then
 				nameplate.unitFrame:UpdateAllElements(event)
 			end
+		elseif(event == 'UNIT_FACTION' and unit) then
+			local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
+
+			if (nameplateCallback) then
+				nameplateCallback(nameplate and nameplate.unitFrame, event, unit)
+			end
+
+			-- UAE is called after the callback to reduce the number of
+			-- ForceUpdate calls layout devs have to do themselves
+			if(nameplate and nameplate.unitFrame) then
+				nameplate.unitFrame:UpdateAllElements(event)
+			end
 		elseif(event == 'NAME_PLATE_UNIT_ADDED' and unit) then
 			local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
 			if(not nameplate) then return end
@@ -820,7 +842,7 @@ function oUF:SpawnNamePlates(namePrefix, nameplateCallback, nameplateCVars)
 			if(not nameplate.unitFrame) then
 				nameplate.style = style
 
-				nameplate.unitFrame = CreateFrame('Button', prefix..nameplate:GetName(), nameplate, 'PingableUnitFrameTemplate')
+				nameplate.unitFrame = CreateFrame('Button', prefix..nameplate:GetName(), nameplate)
 				nameplate.unitFrame:EnableMouse(false)
 				nameplate.unitFrame.isNamePlate = true
 
@@ -836,13 +858,11 @@ function oUF:SpawnNamePlates(namePrefix, nameplateCallback, nameplateCVars)
 			if(nameplate.UnitFrame) then
 				if(nameplate.UnitFrame.WidgetContainer) then
 					nameplate.UnitFrame.WidgetContainer:SetParent(nameplate.unitFrame)
-					nameplate.UnitFrame.WidgetContainer:SetIgnoreParentAlpha(true)
 					nameplate.unitFrame.WidgetContainer = nameplate.UnitFrame.WidgetContainer
 				end
 
 				if(nameplate.UnitFrame.SoftTargetFrame) then
 					nameplate.UnitFrame.SoftTargetFrame:SetParent(nameplate.unitFrame)
-					nameplate.UnitFrame.SoftTargetFrame:SetIgnoreParentAlpha(true)
 					nameplate.unitFrame.SoftTargetFrame = nameplate.UnitFrame.SoftTargetFrame
 				end
 			end

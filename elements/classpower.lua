@@ -22,11 +22,6 @@ If the sub-widgets are StatusBars, their minimum and maximum values will be set 
 
 Supported class powers:
   - All     - Combo Points
-  - Evoker  - Essence
-  - Mage    - Arcane Charges
-  - Monk    - Chi Orbs
-  - Paladin - Holy Power
-  - Warlock - Soul Shards
 
 ## Examples
 
@@ -51,17 +46,8 @@ local oUF = ns.oUF
 local _, PlayerClass = UnitClass('player')
 
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
-local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
-local SPEC_MONK_WINDWALKER = _G.SPEC_MONK_WINDWALKER or 3
-local SPEC_WARLOCK_DESTRUCTION = _G.SPEC_WARLOCK_DESTRUCTION or 3
-
 local SPELL_POWER_ENERGY = Enum.PowerType.Energy or 3
 local SPELL_POWER_COMBO_POINTS = Enum.PowerType.ComboPoints or 4
-local SPELL_POWER_SOUL_SHARDS = Enum.PowerType.SoulShards or 7
-local SPELL_POWER_HOLY_POWER = Enum.PowerType.HolyPower or 9
-local SPELL_POWER_CHI = Enum.PowerType.Chi or 12
-local SPELL_POWER_ARCANE_CHARGES = Enum.PowerType.ArcaneCharges or 16
-local SPELL_POWER_ESSENCE = Enum.PowerType.Essence or 19
 
 -- Holds the class specific stuff.
 local ClassPowerID, ClassPowerType
@@ -112,24 +98,18 @@ local function Update(self, event, unit, powerType)
 		element:PreUpdate()
 	end
 
-	local cur, max, mod, oldMax, chargedPoints
+	local cur, max, mod, oldMax
 	if(event ~= 'ClassPowerDisable') then
 		local powerID = unit == 'vehicle' and SPELL_POWER_COMBO_POINTS or ClassPowerID
 		cur = UnitPower(unit, powerID, true)
 		max = UnitPowerMax(unit, powerID)
 		mod = UnitPowerDisplayMod(powerID)
-		chargedPoints = GetUnitChargedPowerPoints(unit)
 
 		-- UNIT_POWER_POINT_CHARGE doesn't provide a power type
 		powerType = powerType or ClassPowerType
 
 		-- mod should never be 0, but according to Blizz code it can actually happen
 		cur = mod == 0 and 0 or cur / mod
-
-		-- BUG: Destruction is supposed to show partial soulshards, but Affliction and Demonology should only show full ones
-		if(ClassPowerType == 'SOUL_SHARDS' and GetSpecialization() ~= SPEC_WARLOCK_DESTRUCTION) then
-			cur = cur - cur % 1
-		end
 
 		local numActive = cur + 0.9
 		for i = 1, max do
@@ -165,7 +145,7 @@ local function Update(self, event, unit, powerType)
 	* ...           - the indices of currently charged power points, if any
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(cur, max, oldMax ~= max, powerType, unpack(chargedPoints or {}))
+		return element:PostUpdate(cur, max, oldMax ~= max, powerType)
 	end
 end
 
@@ -181,6 +161,19 @@ local function Path(self, ...)
 	return (self.ClassPower.Override or Update) (self, ...)
 end
 
+local function ComboPointPath(self, ...)
+	--[[ Override: ClassPower.Override(self, event, unit, ...)
+	Used to completely override the internal update function.
+
+	* self  - the parent object
+	* event - the event triggering the update (string)
+	* unit  - the unit accompanying the event (string)
+	* ...   - the arguments accompanying the event
+	--]]
+	local event = ...
+	return Path(self, event, self.unit, 'COMBO_POINTS')
+end
+
 local function Visibility(self, event, unit)
 	local element = self.ClassPower
 	local shouldEnable
@@ -189,16 +182,14 @@ local function Visibility(self, event, unit)
 		shouldEnable = PlayerVehicleHasComboPoints()
 		unit = 'vehicle'
 	elseif(ClassPowerID) then
-		if(not RequireSpec or RequireSpec == GetSpecialization()) then
-			-- use 'player' instead of unit because 'SPELLS_CHANGED' is a unitless event
-			if(not RequirePower or RequirePower == UnitPowerType('player')) then
-				if(not RequireSpell or IsPlayerSpell(RequireSpell)) then
-					self:UnregisterEvent('SPELLS_CHANGED', Visibility)
-					shouldEnable = true
-					unit = 'player'
-				else
-					self:RegisterEvent('SPELLS_CHANGED', Visibility, true)
-				end
+		-- use 'player' instead of unit because 'SPELLS_CHANGED' is a unitless event
+		if(not RequirePower or RequirePower == UnitPowerType('player')) then
+			if(not RequireSpell or IsPlayerSpell(RequireSpell)) then
+				self:UnregisterEvent('SPELLS_CHANGED', Visibility)
+				shouldEnable = true
+				unit = 'player'
+			else
+				self:RegisterEvent('SPELLS_CHANGED', Visibility, true)
 			end
 		end
 	end
@@ -258,9 +249,9 @@ do
 	function ClassPowerEnable(self)
 		self:RegisterEvent('UNIT_MAXPOWER', Path)
 		self:RegisterEvent('UNIT_POWER_UPDATE', Path)
-
-		-- according to Blizz any class may receive this event due to specific spell auras
-		self:RegisterEvent('UNIT_POWER_POINT_CHARGE', Path)
+		self:RegisterEvent('UNIT_POWER_FREQUENT', Path)
+		-- self:RegisterEvent('PLAYER_TARGET_CHANGED', ComboPointPath, true)
+		self:RegisterEvent('COMBO_TARGET_CHANGED', ComboPointPath, true)
 
 		self.ClassPower.__isEnabled = true
 
@@ -272,9 +263,11 @@ do
 	end
 
 	function ClassPowerDisable(self)
-		self:UnregisterEvent('UNIT_POWER_UPDATE', Path)
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
-		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
+		self:UnregisterEvent('UNIT_POWER_UPDATE', Path)
+		self:UnregisterEvent('UNIT_POWER_FREQUENT', Path)
+		-- self:UnregisterEvent('PLAYER_TARGET_CHANGED', ComboPointPath)
+		self:UnregisterEvent('COMBO_TARGET_CHANGED', ComboPointPath)
 
 		local element = self.ClassPower
 		for i = 1, #element do
@@ -285,17 +278,7 @@ do
 		Path(self, 'ClassPowerDisable', 'player', ClassPowerType)
 	end
 
-	if(PlayerClass == 'MONK') then
-		ClassPowerID = SPELL_POWER_CHI
-		ClassPowerType = 'CHI'
-		RequireSpec = SPEC_MONK_WINDWALKER
-	elseif(PlayerClass == 'PALADIN') then
-		ClassPowerID = SPELL_POWER_HOLY_POWER
-		ClassPowerType = 'HOLY_POWER'
-	elseif(PlayerClass == 'WARLOCK') then
-		ClassPowerID = SPELL_POWER_SOUL_SHARDS
-		ClassPowerType = 'SOUL_SHARDS'
-	elseif(PlayerClass == 'ROGUE' or PlayerClass == 'DRUID') then
+	if(PlayerClass == 'ROGUE' or PlayerClass == 'DRUID') then
 		ClassPowerID = SPELL_POWER_COMBO_POINTS
 		ClassPowerType = 'COMBO_POINTS'
 
@@ -303,13 +286,6 @@ do
 			RequirePower = SPELL_POWER_ENERGY
 			RequireSpell = 5221 -- Shred
 		end
-	elseif(PlayerClass == 'MAGE') then
-		ClassPowerID = SPELL_POWER_ARCANE_CHARGES
-		ClassPowerType = 'ARCANE_CHARGES'
-		RequireSpec = SPEC_MAGE_ARCANE
-	elseif(PlayerClass == 'EVOKER') then
-		ClassPowerID = SPELL_POWER_ESSENCE
-		ClassPowerType = 'ESSENCE'
 	end
 end
 
@@ -323,6 +299,8 @@ local function Enable(self, unit)
 		if(RequireSpec or RequireSpell) then
 			self:RegisterEvent('PLAYER_TALENT_UPDATE', VisibilityPath, true)
 		end
+
+		self:RegisterEvent('PLAYER_TARGET_CHANGED', VisibilityPath, true)
 
 		if(RequirePower) then
 			self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
@@ -351,6 +329,7 @@ local function Disable(self)
 		ClassPowerDisable(self)
 
 		self:UnregisterEvent('PLAYER_TALENT_UPDATE', VisibilityPath)
+		self:UnregisterEvent('PLAYER_TARGET_CHANGED', VisibilityPath)
 		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 		self:UnregisterEvent('SPELLS_CHANGED', Visibility)
 	end

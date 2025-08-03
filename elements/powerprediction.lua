@@ -44,7 +44,7 @@ local _, ns = ...
 local oUF = ns.oUF
 
 -- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
-local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {}
 
 local ADDITIONAL_POWER_BAR_INDEX = 0
 

@@ -201,7 +201,7 @@ local function UpdatePips(element, numStages)
 end
 
 --[[ Override: Castbar:ShouldShow(unit)
-Handles check for which unit the castbar should show for.  
+Handles check for which unit the castbar should show for.
 Defaults to the object unit.
 
 * self - the Castbar widget
@@ -547,13 +547,10 @@ local function Enable(self, unit)
 
 		self:RegisterEvent('UNIT_SPELLCAST_START', CastStart)
 		self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_START', CastStart)
-		self:RegisterEvent('UNIT_SPELLCAST_EMPOWER_START', CastStart)
 		self:RegisterEvent('UNIT_SPELLCAST_STOP', CastStop)
 		self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_STOP', CastStop)
-		self:RegisterEvent('UNIT_SPELLCAST_EMPOWER_STOP', CastStop)
 		self:RegisterEvent('UNIT_SPELLCAST_DELAYED', CastUpdate)
 		self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_UPDATE', CastUpdate)
-		self:RegisterEvent('UNIT_SPELLCAST_EMPOWER_UPDATE', CastUpdate)
 		self:RegisterEvent('UNIT_SPELLCAST_FAILED', CastFail)
 		self:RegisterEvent('UNIT_SPELLCAST_INTERRUPTED', CastFail)
 		self:RegisterEvent('UNIT_SPELLCAST_INTERRUPTIBLE', CastInterruptible)
@@ -566,9 +563,8 @@ local function Enable(self, unit)
 		element:SetScript('OnUpdate', element.OnUpdate or onUpdate)
 
 		if(self.unit == 'player' and not (self.hasChildren or self.isChild or self.isNamePlate)) then
-			PlayerCastingBarFrame:SetUnit(nil)
-			PetCastingBarFrame:SetUnit(nil)
-			PetCastingBarFrame:UnregisterEvent('UNIT_PET')
+			CastingBarFrame_SetUnit(CastingBarFrame, nil)
+			CastingBarFrame_SetUnit(PetCastingBarFrame, nil)
 		end
 
 		if(element:IsObjectType('StatusBar') and not element:GetStatusBarTexture()) then
@@ -603,13 +599,10 @@ local function Disable(self)
 
 		self:UnregisterEvent('UNIT_SPELLCAST_START', CastStart)
 		self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_START', CastStart)
-		self:UnregisterEvent('UNIT_SPELLCAST_EMPOWER_START', CastStart)
 		self:UnregisterEvent('UNIT_SPELLCAST_STOP', CastStop)
 		self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_STOP', CastStop)
-		self:UnregisterEvent('UNIT_SPELLCAST_EMPOWER_STOP', CastStop)
 		self:UnregisterEvent('UNIT_SPELLCAST_DELAYED', CastUpdate)
 		self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_UPDATE', CastUpdate)
-		self:UnregisterEvent('UNIT_SPELLCAST_EMPOWER_UPDATE', CastUpdate)
 		self:UnregisterEvent('UNIT_SPELLCAST_FAILED', CastFail)
 		self:UnregisterEvent('UNIT_SPELLCAST_INTERRUPTED', CastFail)
 		self:UnregisterEvent('UNIT_SPELLCAST_INTERRUPTIBLE', CastInterruptible)

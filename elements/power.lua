@@ -32,9 +32,6 @@ The following options are listed by priority. The first check that returns true 
 .colorTapping      - Use `self.colors.tapping` to color the bar if the unit isn't tapped by the player (boolean)
 .colorThreat       - Use `self.colors.threat[threat]` to color the bar based on the unit's threat status. `threat` is
                      defined by the first return of [UnitThreatSituation](https://warcraft.wiki.gg/wiki/API_UnitThreatSituation) (boolean)
-.colorPowerAtlas   - Use `self.colors.power[token].atlas` to replace the texture whenever it's available. The previously
-                     defined texture (if any) will be restored if the color changes to one that doesn't have an atlas
-                     (boolean)
 .colorPower        - Use `self.colors.power[token]` to color the bar based on the unit's power type. This method will
                      fall-back to `:GetAlternativeColor()` if it can't find a color matching the token. If this function
                      isn't defined, then it will attempt to color based upon the alternative power colors returned by
@@ -94,7 +91,7 @@ local _, ns = ...
 local oUF = ns.oUF
 local Private = oUF.Private
 
-local unitSelectionType = Private.unitSelectionType
+local UnitSelectionColor = Private.UnitSelectionColor
 
 -- sourced from Blizzard_UnitFrame/UnitPowerBarAlt.lua
 local ALTERNATE_POWER_INDEX = Enum.PowerType.Alternate or 10
@@ -123,7 +120,9 @@ local function UpdateColor(self, event, unit)
 
 	local pType, pToken, altR, altG, altB = UnitPowerType(unit)
 
-	local r, g, b, color, atlas
+	local selectionColor = UnitSelectionColor(unit, element.considerSelectionInCombatHostile)
+
+	local r, g, b, color
 	if(element.colorDisconnected and not UnitIsConnected(unit)) then
 		color = self.colors.disconnected
 	elseif(element.colorTapping and not UnitPlayerControlled(unit) and UnitIsTapDenied(unit)) then
@@ -149,17 +148,13 @@ local function UpdateColor(self, event, unit)
 		else
 			color = self.colors.power[ALTERNATE_POWER_INDEX]
 		end
-
-		if(element.colorPowerAtlas and color) then
-			atlas = color.atlas
-		end
 	elseif(element.colorClass and (UnitIsPlayer(unit) or UnitInPartyIsAI(unit)))
 		or (element.colorClassNPC and not (UnitIsPlayer(unit) or UnitInPartyIsAI(unit)))
 		or (element.colorClassPet and UnitPlayerControlled(unit) and not UnitIsPlayer(unit)) then
 		local _, class = UnitClass(unit)
 		color = self.colors.class[class]
-	elseif(element.colorSelection and unitSelectionType(unit, element.considerSelectionInCombatHostile)) then
-		color = self.colors.selection[unitSelectionType(unit, element.considerSelectionInCombatHostile)]
+	elseif(element.colorSelection and selectionColor) then
+		color = selectionColor
 	elseif(element.colorReaction and UnitReaction(unit, 'player')) then
 		color = self.colors.reaction[UnitReaction(unit, 'player')]
 	elseif(element.colorSmooth) then
@@ -167,26 +162,17 @@ local function UpdateColor(self, event, unit)
 		r, g, b = self:ColorGradient((element.cur or 1) + adjust, (element.max or 1) + adjust, unpack(element.smoothGradient or self.colors.smooth))
 	end
 
-	if(atlas) then
-		element:SetStatusBarTexture(atlas)
-		element:SetStatusBarColor(1, 1, 1)
-	else
-		if(color) then
-			r, g, b = color[1], color[2], color[3]
-		end
+	if(color) then
+		r, g, b = color[1], color[2], color[3]
+	end
 
-		if(b) then
-			if(element.__texture) then
-				element:SetStatusBarTexture(element.__texture)
-			end
+	if(b) then
+		element:SetStatusBarColor(r, g, b)
 
-			element:SetStatusBarColor(r, g, b)
-
-			local bg = element.bg
-			if(bg) then
-				local mu = bg.multiplier or 1
-				bg:SetVertexColor(r * mu, g * mu, b * mu)
-			end
+		local bg = element.bg
+		if(bg) then
+			local mu = bg.multiplier or 1
+			bg:SetVertexColor(r * mu, g * mu, b * mu)
 		end
 	end
 
@@ -198,10 +184,9 @@ local function UpdateColor(self, event, unit)
 	* r     - the red component of the used color (number?)[0-1]
 	* g     - the green component of the used color (number?)[0-1]
 	* b     - the blue component of the used color (number?)[0-1]
-	* atlas - the atlas used instead of color (string?)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(unit, r, g, b, atlas)
+		element:PostUpdateColor(unit, r, g, b)
 	end
 end
 
@@ -418,10 +403,6 @@ local function Enable(self)
 
 		if(element:IsObjectType('StatusBar') and not element:GetStatusBarTexture()) then
 			element:SetStatusBarTexture([[Interface\TargetingFrame\UI-StatusBar]])
-		end
-
-		if(element.colorPowerAtlas) then
-			element.__texture = element.__texture or element:GetStatusBarTexture():GetTexture()
 		end
 
 		if(not element.GetDisplayPower) then
