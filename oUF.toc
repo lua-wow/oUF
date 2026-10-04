@@ -1,4 +1,4 @@
-## Interface: 11507
+## Interface: 11509
 ## Title: oUF
 ## Author: Haste, lightspark, p3lim, Rainrider
 ## Version: @project-version@
