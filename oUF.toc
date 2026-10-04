@@ -1,4 +1,4 @@
-## Interface: 50500
+## Interface: 50504
 ## Title: oUF
 ## Author: Haste, lightspark, p3lim, Rainrider
 ## Version: @project-version@
