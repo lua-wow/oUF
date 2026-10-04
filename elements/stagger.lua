@@ -81,16 +81,14 @@ local function UpdateColor(self, event, unit)
 		end
 	end
 
-	--[[ Callback: Stagger:PostUpdateColor(r, g, b)
+	--[[ Callback: Stagger:PostUpdateColor(color)
 	Called after the element color has been updated.
 
-	* self - the Stagger element
-	* r    - the red component of the used color (number)[0-1]
-	* g    - the green component of the used color (number)[0-1]
-	* b    - the blue component of the used color (number)[0-1]
+	* self  - the Stagger element
+	* color - the used ColorMixin-based object (table?)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(r, g, b)
+		element:PostUpdateColor(color)
 	end
 end
 
