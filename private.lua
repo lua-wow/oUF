@@ -1,6 +1,9 @@
 local _, ns = ...
 local Private = ns.oUF.Private
 
+-- deprecated: only defined while the loadDeprecationFallbacks CVar is set
+local ShowBossFrameWhenUninteractable = ShowBossFrameWhenUninteractable or UnitIsVisible
+
 -- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
 local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {
 	DRUID = {
