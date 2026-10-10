@@ -1,6 +1,9 @@
 local _, ns = ...
 local Private = ns.oUF.Private
 
+-- deprecated: only defined while the loadDeprecationFallbacks CVar is set
+local ShowBossFrameWhenUninteractable = ShowBossFrameWhenUninteractable or UnitIsVisible
+
 function Private.argcheck(value, num, ...)
 	assert(type(num) == 'number', "Bad argument #2 to 'argcheck' (number expected, got " .. type(num) .. ')')
 
