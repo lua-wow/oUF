@@ -142,10 +142,11 @@ function oUF:DisableNamePlate(frame)
 	if(not(frame and frame.UnitFrame)) then return end
 	if(frame.UnitFrame:IsForbidden()) then return end
 
-	if(not hookedNameplates[frame]) then
+	-- Blizzard pools unit frames across nameplates, so hook each unit frame once
+	if(not hookedNameplates[frame.UnitFrame]) then
 		frame.UnitFrame:HookScript('OnShow', insecureHide)
 
-		hookedNameplates[frame] = true
+		hookedNameplates[frame.UnitFrame] = true
 	end
 
 	handleFrame(frame.UnitFrame, true)
