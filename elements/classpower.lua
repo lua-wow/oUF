@@ -96,7 +96,7 @@ local function Update(self, event, unit, powerType)
 		element:PreUpdate()
 	end
 
-	local cur, max, mod, oldMax
+	local cur, max, mod, oldCur, oldMax
 	if(event ~= 'ClassPowerDisable') then
 		local powerID = unit == 'vehicle' and SPELL_POWER_COMBO_POINTS or ClassPowerID
 		cur = UnitPower(unit, powerID, true)
@@ -120,6 +120,9 @@ local function Update(self, event, unit, powerType)
 			end
 		end
 
+		oldCur = element.__cur
+		element.__cur = cur
+
 		oldMax = element.__max
 		if(max ~= oldMax) then
 			if(max < oldMax) then
@@ -132,18 +135,18 @@ local function Update(self, event, unit, powerType)
 			element.__max = max
 		end
 	end
-	--[[ Callback: ClassPower:PostUpdate(cur, max, hasMaxChanged, powerType)
-	Called after the element has been updated.
+	--[[ Callback: ClassPower:PostUpdate(cur, max, hasCurChanged, hasMaxChanged, powerType)
+	Called after the element has been updated (same signature as Retail oUF).
 
 	* self          - the ClassPower element
 	* cur           - the current amount of power (number)
 	* max           - the maximum amount of power (number)
+	* hasCurChanged - indicates whether the current amount has changed since the last update (boolean)
 	* hasMaxChanged - indicates whether the maximum amount has changed since the last update (boolean)
 	* powerType     - the active power type (string)
-	* ...           - the indices of currently charged power points, if any
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(cur, max, oldMax ~= max, powerType)
+		return element:PostUpdate(cur, max, oldCur ~= cur, oldMax ~= max, powerType)
 	end
 end
 
