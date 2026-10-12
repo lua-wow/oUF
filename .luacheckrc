@@ -67,6 +67,7 @@ read_globals = {
 	'CopyTable',
 	'CreateFrame',
 	'GetArenaOpponentSpec',
+	'GetComboPoints',
 	'GetNetStats',
 	'GetNumArenaOpponentSpecs',
 	'GetPartyAssignment',

@@ -113,7 +113,12 @@ local function Update(self, event, unit, powerType)
 	local cur, max, mod, oldCur, oldMax
 	if(event ~= 'ClassPowerDisable') then
 		local powerID = unit == 'vehicle' and SPELL_POWER_COMBO_POINTS or ClassPowerID
-		cur = UnitPower(unit, powerID, true)
+		-- combo points are on the target (as Blizzard's ComboFrame); UnitPower keeps the previous target's on MoP
+		if(powerID == SPELL_POWER_COMBO_POINTS) then
+			cur = GetComboPoints(unit, 'target')
+		else
+			cur = UnitPower(unit, powerID, true)
+		end
 		max = UnitPowerMax(unit, powerID)
 		mod = UnitPowerDisplayMod(powerID)
 
