@@ -57,17 +57,16 @@ local function Update(self, event)
 		self:SetAlpha(element.insideAlpha)
 	end
 
-	--[[ Callback: Range:PostUpdate(object, inRange, checkedRange, isConnected)
+	--[[ Callback: Range:PostUpdate(object, inRange, isEligible)
 	Called after the element has been updated.
 
-	* self         - the Range element
-	* object       - the parent object
-	* inRange      - indicates if the unit was within 40 yards of the player (boolean)
-	* checkedRange - indicates if the range check was actually performed (boolean)
-	* isConnected  - indicates if the unit is online (boolean)
+	* self       - the Range element
+	* object     - the parent object
+	* inRange    - indicates if the unit is within 40 yards of the player (boolean)
+	* isEligible - indicates if the unit is eligible for the range check (boolean)
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(self, inRange, checkedRange, connected)
+		return element:PostUpdate(self, inRange, connected and checkedRange)
 	end
 end
 

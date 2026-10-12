@@ -151,16 +151,14 @@ local function UpdateColor(self, event, runeID)
 		colorRune(element[index], r, g, b)
 	end
 
-	--[[ Callback: Runes:PostUpdateColor(r, g, b)
+	--[[ Callback: Runes:PostUpdateColor(color)
 	Called after the element color has been updated.
 
-	* self - the Runes element
-	* r    - the red component of the used color (number)[0-1]
-	* g    - the green component of the used color (number)[0-1]
-	* b    - the blue component of the used color (number)[0-1]
+	* self  - the Runes element
+	* color - the used ColorMixin-based object (table)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(r, g, b)
+		element:PostUpdateColor(color)
 	end
 end
 

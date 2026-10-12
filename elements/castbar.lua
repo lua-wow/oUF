@@ -298,14 +298,19 @@ local function CastStart(self, event, unit)
 		(element.UpdatePips or UpdatePips) (element, numStages)
 	end
 
-	--[[ Callback: Castbar:PostCastStart(unit)
+	--[[ Callback: Castbar:PostCastStart(unit, spellID, notInterruptible, name, texture, isTradeSkill)
 	Called after the element has been updated upon a spell cast or channel start.
 
-	* self - the Castbar widget
-	* unit - the unit for which the update has been triggered (string)
+	* self             - the Castbar widget
+	* unit             - the unit for which the update has been triggered (string)
+	* spellID          - the ID of the spell (number)
+	* notInterruptible - whether the spell is interruptible (boolean)
+	* name             - the display name of the spell (string)
+	* texture          - the icon of the spell (number)
+	* isTradeSkill     - whether the spell is a tradeskill (boolean)
 	--]]
 	if(element.PostCastStart) then
-		element:PostCastStart(unit)
+		element:PostCastStart(unit, spellID, notInterruptible, text, texture, isTradeSkill)
 	end
 
 	element:Show()
@@ -359,14 +364,15 @@ local function CastUpdate(self, event, unit, castID, spellID)
 	element:SetMinMaxValues(0, element.max)
 	element:SetValue(element.duration)
 
-	--[[ Callback: Castbar:PostCastUpdate(unit)
+	--[[ Callback: Castbar:PostCastUpdate(unit, spellID)
 	Called after the element has been updated when a spell cast or channel has been updated.
 
-	* self - the Castbar widget
-	* unit - the unit that the update has been triggered (string)
+	* self    - the Castbar widget
+	* unit    - the unit that the update has been triggered (string)
+	* spellID - the ID of the spell (number)
 	--]]
 	if(element.PostCastUpdate) then
-		return element:PostCastUpdate(unit)
+		return element:PostCastUpdate(unit, element.spellID)
 	end
 end
 
@@ -439,14 +445,16 @@ local function CastInterruptible(self, event, unit)
 
 	if(element.Shield) then element.Shield:SetShown(element.notInterruptible) end
 
-	--[[ Callback: Castbar:PostCastInterruptible(unit)
+	--[[ Callback: Castbar:PostCastInterruptible(unit, spellID, notInterruptible)
 	Called after the element has been updated when a spell cast has become interruptible or uninterruptible.
 
-	* self - the Castbar widget
-	* unit - the unit for which the update has been triggered (string)
+	* self             - the Castbar widget
+	* unit             - the unit for which the update has been triggered (string)
+	* spellID          - the ID of the spell (number)
+	* notInterruptible - whether the spell is interruptible (boolean)
 	--]]
 	if(element.PostCastInterruptible) then
-		return element:PostCastInterruptible(unit)
+		return element:PostCastInterruptible(unit, element.spellID, element.notInterruptible)
 	end
 end
 

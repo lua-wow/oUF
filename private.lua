@@ -65,6 +65,19 @@ function Private.UnitSelectionColor(unit, useExtendedColors)
 	return ns.oUF:CreateColor(r, g, b, a or 1)
 end
 
+-- callbacks take a color object, as Retail's curve colors; one per element, reused
+function Private.SmoothColor(element, r, g, b)
+	local color = element.__smoothColor
+	if(color) then
+		color:SetRGBA(r, g, b)
+	else
+		color = ns.oUF:CreateColor(r, g, b)
+		element.__smoothColor = color
+	end
+
+	return color
+end
+
 function Private.xpcall(func, ...)
 	return xpcall(func, Private.nierror, ...)
 end

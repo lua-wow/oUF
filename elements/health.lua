@@ -115,6 +115,7 @@ local oUF = ns.oUF
 local Private = oUF.Private
 
 local UnitSelectionColor = Private.UnitSelectionColor
+local SmoothColor = Private.SmoothColor
 
 local function UpdateColor(self, event, unit)
 	if(not unit or self.unit ~= unit) then return end
@@ -140,6 +141,7 @@ local function UpdateColor(self, event, unit)
 		color = self.colors.reaction[UnitReaction(unit, 'player')]
 	elseif(element.colorSmooth) then
 		r, g, b = self:ColorGradient(element.cur or 1, element.max or 1, unpack(element.smoothGradient or self.colors.smooth))
+		color = SmoothColor(element, r, g, b)
 	elseif(element.colorHealth) then
 		color = self.colors.health
 	end
@@ -158,17 +160,15 @@ local function UpdateColor(self, event, unit)
 		end
 	end
 
-	--[[ Callback: Health:PostUpdateColor(unit, r, g, b)
+	--[[ Callback: Health:PostUpdateColor(unit, color)
 	Called after the element color has been updated.
 
-	* self - the Health element
-	* unit - the unit for which the update has been triggered (string)
-	* r    - the red component of the used color (number)[0-1]
-	* g    - the green component of the used color (number)[0-1]
-	* b    - the blue component of the used color (number)[0-1]
+	* self  - the Health element
+	* unit  - the unit for which the update has been triggered (string)
+	* color - the used ColorMixin-based object (table?)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(unit, r, g, b)
+		element:PostUpdateColor(unit, color)
 	end
 end
 

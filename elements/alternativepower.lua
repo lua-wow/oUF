@@ -103,6 +103,7 @@ local function UpdateColor(self, event, unit, powerType)
 	elseif(element.colorSmooth) then
 		local adjust = 0 - (element.min or 0)
 		r, g, b = self:ColorGradient((element.cur or 1) + adjust, (element.max or 1) + adjust, unpack(element.smoothGradient or self.colors.smooth))
+		color = Private.SmoothColor(element, r, g, b)
 	end
 
 	if(color) then
@@ -119,17 +120,15 @@ local function UpdateColor(self, event, unit, powerType)
 		end
 	end
 
-	--[[ Callback: AlternativePower:PostUpdateColor(unit, r, g, b)
+	--[[ Callback: AlternativePower:PostUpdateColor(unit, color)
 	Called after the element color has been updated.
 
-	* self - the AlternativePower element
-	* unit - the unit for which the update has been triggered (string)
-	* r    - the red component of the used color (number)[0-1]
-	* g    - the green component of the used color (number)[0-1]
-	* b    - the blue component of the used color (number)[0-1]
+	* self  - the AlternativePower element
+	* unit  - the unit for which the update has been triggered (string)
+	* color - the used ColorMixin-based object (table?)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(unit, r, g, b)
+		element:PostUpdateColor(unit, color)
 	end
 end
 

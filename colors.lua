@@ -16,7 +16,8 @@ local colorMixin = {
 		self[2] = g
 		self.b = b
 		self[3] = b
-		self.a = a
+		-- as ColorMixin: a nil alpha is not a valid colorRGBA (e.g. ColorCurve:AddPoint)
+		self.a = a or 1
 
 		-- pre-generate the hex color, there's no point to this being generated on the fly
 		self.hex = string.format('ff%02x%02x%02x', self:GetRGBAsBytes())
@@ -87,7 +88,7 @@ local colors = {
 		[13] = oUF:CreateColor(0, 153, 0), -- BATTLEGROUND_FRIENDLY_PVP
 	},
 	class = {},
-	debuff = {
+	dispel = {
 		["Stealable"] = oUF:CreateColor(0.93, 0.91, 0.55),
 		["Bleed"] = oUF:CreateColor(0.90, 0.10, 0.10),
 		["Enrage"] = oUF:CreateColor(0.78, 0.25, 0.25)
@@ -136,15 +137,15 @@ end
 
 if(_G.DebuffTypeColor) then
 	for debuffType, color in next, _G.DebuffTypeColor do
-		colors.debuff[debuffType] = oUF:CreateColor(color.r, color.g, color.b)
+		colors.dispel[debuffType] = oUF:CreateColor(color.r, color.g, color.b)
 	end
 else
 	-- DebuffTypeColor was removed (1.15.9 / 2.5.x / 5.5.x)
 	for dispelName, dispelInfo in next, AuraUtil.GetDebuffDisplayInfoTable() do
-		colors.debuff[dispelName] = oUF:CreateColor(dispelInfo.color:GetRGB())
+		colors.dispel[dispelName] = oUF:CreateColor(dispelInfo.color:GetRGB())
 	end
-	colors.debuff.none = colors.debuff.None
-	colors.debuff[''] = colors.debuff.None
+	colors.dispel.none = colors.dispel.None
+	colors.dispel[''] = colors.dispel.None
 end
 
 for eclass, color in next, _G.FACTION_BAR_COLORS do

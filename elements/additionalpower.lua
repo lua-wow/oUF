@@ -77,6 +77,7 @@ local function UpdateColor(self, event, unit, powerType)
 		color = self.colors.class[playerClass]
 	elseif(element.colorSmooth) then
 		r, g, b = self:ColorGradient(element.cur or 1, element.max or 1, unpack(element.smoothGradient or self.colors.smooth))
+		color = Private.SmoothColor(element, r, g, b)
 	end
 
 	if(color) then
@@ -93,16 +94,14 @@ local function UpdateColor(self, event, unit, powerType)
 		end
 	end
 
-	--[[ Callback: AdditionalPower:PostUpdateColor(r, g, b)
+	--[[ Callback: AdditionalPower:PostUpdateColor(color)
 	Called after the element color has been updated.
 
-	* self - the AdditionalPower element
-	* r    - the red component of the used color (number)[0-1]
-	* g    - the green component of the used color (number)[0-1]
-	* b    - the blue component of the used color (number)[0-1]
+	* self  - the AdditionalPower element
+	* color - the used ColorMixin-based object (table?)
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(r, g, b)
+		element:PostUpdateColor(color)
 	end
 end
 

@@ -208,7 +208,7 @@ local function updateAura(element, unit, data, position)
 
 	if(button.Overlay) then
 		if((data.isHarmful and element.showDebuffType) or (not data.isHarmful and element.showBuffType) or element.showType) then
-			local color = element.__owner.colors.debuff[data.dispelName] or element.__owner.colors.debuff.none
+			local color = element.__owner.colors.dispel[data.dispelName] or element.__owner.colors.dispel.none
 
 			button.Overlay:SetVertexColor(color[1], color[2], color[3])
 			button.Overlay:Show()

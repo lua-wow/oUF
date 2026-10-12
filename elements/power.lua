@@ -173,37 +173,39 @@ local function UpdateColor(self, event, unit)
 		element:SetStatusBarTexture(atlas)
 		element:SetStatusBarColor(1, 1, 1)
 	else
+		-- r, g, b stay the alternative components, as Retail passes them
+		local cr, cg, cb = r, g, b
 		if(color) then
-			r, g, b = color[1], color[2], color[3]
+			cr, cg, cb = color[1], color[2], color[3]
 		end
 
-		if(b) then
+		if(cb) then
 			if(element.__texture) then
 				element:SetStatusBarTexture(element.__texture)
 			end
 
-			element:SetStatusBarColor(r, g, b)
+			element:SetStatusBarColor(cr, cg, cb)
 
 			local bg = element.bg
 			if(bg) then
 				local mu = bg.multiplier or 1
-				bg:SetVertexColor(r * mu, g * mu, b * mu)
+				bg:SetVertexColor(cr * mu, cg * mu, cb * mu)
 			end
 		end
 	end
 
-	--[[ Callback: Power:PostUpdateColor(unit, r, g, b, atlas)
+	--[[ Callback: Power:PostUpdateColor(unit, color, altR, altG, altB)
 	Called after the element color has been updated.
 
 	* self  - the Power element
 	* unit  - the unit for which the update has been triggered (string)
-	* r     - the red component of the used color (number?)[0-1]
-	* g     - the green component of the used color (number?)[0-1]
-	* b     - the blue component of the used color (number?)[0-1]
-	* atlas - the atlas used instead of color (string?)
+	* color - the used ColorMixin-based object (table?)
+	* altR  - the red component of the used alternative color (number?)[0-1]
+	* altG  - the green component of the used alternative color (number?)[0-1]
+	* altB  - the blue component of the used alternative color (number?)[0-1]
 	--]]
 	if(element.PostUpdateColor) then
-		element:PostUpdateColor(unit, r, g, b, atlas)
+		element:PostUpdateColor(unit, color, r, g, b)
 	end
 end
 
