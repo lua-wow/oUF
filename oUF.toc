@@ -1,6 +1,6 @@
-## Interface: 11509
+## Interface: 11509, 20506, 38002, 50504
 ## Title: oUF
-## Author: Haste, lightspark, p3lim, Rainrider
+## Author: Haste, lightspark, p3lim, Rainrider, Luaerror
 ## Version: @project-version@
 ## Notes: Unit frame framework. Does nothing by itself.
 ## OptionalDeps: Clique

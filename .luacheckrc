@@ -15,6 +15,10 @@ ignore = {
 	'631', -- line is too long
 }
 
+globals = {
+	'Arena_LoadUI', -- FrameXML (TBC+), replaced to keep Blizzard_ArenaUI unloaded
+}
+
 read_globals = {
 	'debugstack',
 	'geterrorhandler',
@@ -51,10 +55,12 @@ read_globals = {
 
 	-- namespaces
 	'C_AddOns',
+	'C_CVar',
 	'C_IncomingSummon',
 	'C_NamePlate',
 	'C_PvP',
 	'C_Spell',
+	'C_SpecializationInfo',
 	'C_UnitAuras',
 
 	-- API
