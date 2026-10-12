@@ -22,6 +22,9 @@ A default texture will be applied if the sub-widgets are StatusBars and don't ha
 .sortOrder - Sorting order. Sorts by the remaining cooldown time, 'asc' - from the least cooldown time remaining (fully
              charged) to the most (fully depleted), 'desc' - the opposite (string?)['asc', 'desc']
 
+With rune types (`GetRuneType`, WotLK and MoP) the runes keep Blizzard's order, each rune is colored by its type
+(`self.colors.runes`: 1 blood, 2 frost, 3 unholy, 4 death) and `.colorSpec` and `.sortOrder` are ignored.
+
 ## Sub-Widgets Options
 
 .multiplier - Used to tint the background based on the main widgets R, G and B values. Defaults to 1 (number)[0-1]
@@ -49,8 +52,13 @@ local oUF = ns.oUF
 
 -- Blizzard
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
+-- undocumented, WotLK and MoP; Blizzard's rune frame and combat text use it
+local GetRuneType = GetRuneType
 
-local runemap = {1, 2, 3, 4, 5, 6}
+-- Blizzard's display order (RuneFrame_FixRunes); maps both ways
+local runemap = GetRuneType and {1, 2, 5, 6, 3, 4} or {1, 2, 3, 4, 5, 6}
+-- rune type (1 blood, 2 unholy, 3 frost, 4 death per combat text) to colors.runes index (unverified)
+local runeTypeColor = {1, 3, 2, 4}
 local hasSortOrder = false
 
 local function onUpdate(self, elapsed)
@@ -83,8 +91,50 @@ local function descSort(runeAID, runeBID)
 	end
 end
 
-local function UpdateColor(self, event)
+local function colorRune(rune, r, g, b)
+	rune:SetStatusBarColor(r, g, b)
+
+	local bg = rune.bg
+	if(bg) then
+		local mu = bg.multiplier or 1
+		bg:SetVertexColor(r * mu, g * mu, b * mu)
+	end
+end
+
+local function UpdateRuneType(self, element, runeID)
+	local rune = element[runemap[runeID]]
+	if(not rune) then return end
+
+	local runeType = GetRuneType(runeID)
+	local color = runeType and self.colors.runes[runeTypeColor[runeType]] or self.colors.power.RUNES
+	colorRune(rune, color[1], color[2], color[3])
+
+	--[[ Callback: Runes:PostUpdateColor(color, rune)
+	Called after a rune's color has been updated (rune types only).
+
+	* self  - the Runes element
+	* color - the used color (table)
+	* rune  - the updated rune (StatusBar)
+	--]]
+	if(element.PostUpdateColor) then
+		element:PostUpdateColor(color, rune)
+	end
+end
+
+local function UpdateColor(self, event, runeID)
 	local element = self.Runes
+
+	if(GetRuneType) then
+		if(event == 'RUNE_TYPE_UPDATE') then
+			UpdateRuneType(self, element, runeID)
+		else
+			for id = 1, #runemap do
+				UpdateRuneType(self, element, id)
+			end
+		end
+
+		return
+	end
 
 	local spec = GetSpecialization() or 0
 
@@ -98,13 +148,7 @@ local function UpdateColor(self, event)
 	local r, g, b = color[1], color[2], color[3]
 
 	for index = 1, #element do
-		element[index]:SetStatusBarColor(r, g, b)
-
-		local bg = element[index].bg
-		if(bg) then
-			local mu = bg.multiplier or 1
-			bg:SetVertexColor(r * mu, g * mu, b * mu)
-		end
+		colorRune(element[index], r, g, b)
 	end
 
 	--[[ Callback: Runes:PostUpdateColor(r, g, b)
@@ -134,15 +178,18 @@ end
 local function Update(self, event)
 	local element = self.Runes
 
-	if(element.sortOrder == 'asc') then
-		table.sort(runemap, ascSort)
-		hasSortOrder = true
-	elseif(element.sortOrder == 'desc') then
-		table.sort(runemap, descSort)
-		hasSortOrder = true
-	elseif(hasSortOrder) then
-		table.sort(runemap)
-		hasSortOrder = false
+	-- rune types keep Blizzard's order
+	if(not GetRuneType) then
+		if(element.sortOrder == 'asc') then
+			table.sort(runemap, ascSort)
+			hasSortOrder = true
+		elseif(element.sortOrder == 'desc') then
+			table.sort(runemap, descSort)
+			hasSortOrder = true
+		elseif(hasSortOrder) then
+			table.sort(runemap)
+			hasSortOrder = false
+		end
 	end
 
 	local currentTime = GetTime()
@@ -217,6 +264,9 @@ local function Enable(self, unit)
 
 		self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
 		self:RegisterEvent('RUNE_POWER_UPDATE', Path, true)
+		if(GetRuneType) then
+			self:RegisterEvent('RUNE_TYPE_UPDATE', ColorPath, true)
+		end
 
 		return true
 	end
@@ -231,6 +281,9 @@ local function Disable(self)
 
 		self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
 		self:UnregisterEvent('RUNE_POWER_UPDATE', Path)
+		if(GetRuneType) then
+			self:UnregisterEvent('RUNE_TYPE_UPDATE', ColorPath)
+		end
 	end
 end
 
