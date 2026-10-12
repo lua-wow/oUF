@@ -7,13 +7,9 @@ local MAX_ARENA_ENEMIES = _G.MAX_ARENA_ENEMIES or 5
 -- sourced from Blizzard_UnitFrame/TargetFrame.lua
 local MAX_BOSS_FRAMES = 8 -- blizzard can spawn more than the default 5 apparently
 
--- sourced from Blizzard_FrameXMLBase/Shared/Constants.lua
-local MEMBERS_PER_RAID_GROUP = _G.MEMBERS_PER_RAID_GROUP or 5
-
 local hookedFrames = {}
 local hookedNameplates = {}
 local isBossHooked = false
-local isPartyHooked = false
 
 local hiddenParent = CreateFrame('Frame', nil, UIParent)
 hiddenParent:SetAllPoints()

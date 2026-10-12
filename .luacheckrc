@@ -27,7 +27,10 @@ read_globals = {
 	table = {fields = {'removemulti', 'wipe'}},
 
 	-- FrameXML
+	'AuraUtil',
 	'BossTargetFrameContainer',
+	'CastingBarFrame',
+	'CastingBarFrame_SetUnit',
 	'Clamp',
 	'ColorMixin',
 	'ComboFrame',
@@ -37,6 +40,7 @@ read_globals = {
 	'FocusFrame',
 	'GameTooltip',
 	'GameTooltip_SetDefaultAnchor',
+	'MAX_PARTY_MEMBERS',
 	'Mixin',
 	'MonkStaggerBar',
 	'NamePlateDriverFrame',
@@ -52,6 +56,13 @@ read_globals = {
 	'TargetofFocusFrame',
 	'TotemFrame',
 	'UIParent',
+	'WOW_PROJECT_BURNING_CRUSADE_CLASSIC',
+	'WOW_PROJECT_CATACLYSM_CLASSIC',
+	'WOW_PROJECT_CLASSIC',
+	'WOW_PROJECT_ID',
+	'WOW_PROJECT_MAINLINE',
+	'WOW_PROJECT_MISTS_CLASSIC',
+	'WOW_PROJECT_WRATH_CLASSIC',
 
 	-- namespaces
 	'C_AddOns',
@@ -66,6 +77,7 @@ read_globals = {
 	-- API
 	'CopyTable',
 	'CreateFrame',
+	'GetAddOnMetadata',
 	'GetArenaOpponentSpec',
 	'GetComboPoints',
 	'GetNetStats',
@@ -153,6 +165,7 @@ read_globals = {
 	'UnitPvpClassification',
 	'UnitRace',
 	'UnitReaction',
+	'UnitSelectionColor',
 	'UnitSelectionType',
 	'UnitStagger',
 	'UnitThreatSituation',
