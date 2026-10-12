@@ -4,18 +4,21 @@ local Private = ns.oUF.Private
 -- deprecated: only defined while the loadDeprecationFallbacks CVar is set
 local ShowBossFrameWhenUninteractable = ShowBossFrameWhenUninteractable or UnitIsVisible
 
--- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
-local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {
-	DRUID = {
-		[Enum.PowerType.LunarPower] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
-	},
-	PRIEST = {
-		[Enum.PowerType.Insanity] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
-	},
-	SHAMAN = {
-		[Enum.PowerType.Maelstrom] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
-	},
-}
+-- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua (wrath, cata, mists): the mana bar shows
+-- while another power is displayed; no such bar on Era and TBC
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = {}
+if(ns.oUF.isWrath or ns.oUF.isMoP) then
+	ALT_POWER_BAR_PAIR_DISPLAY_INFO.DRUID = {
+		[Enum.PowerType.Rage] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+		[Enum.PowerType.Energy] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	}
+end
+if(ns.oUF.isMoP) then
+	-- Mistweaver only, see AdditionalPower
+	ALT_POWER_BAR_PAIR_DISPLAY_INFO.MONK = {
+		[Enum.PowerType.Energy] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	}
+end
 
 function Private.argcheck(value, num, ...)
 	assert(type(num) == 'number', "Bad argument #2 to 'argcheck' (number expected, got " .. type(num) .. ')')
