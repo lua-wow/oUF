@@ -1,16 +1,15 @@
 local _, ns = ...
 local oUF = ns.oUF
 
--- sourced from Blizzard_UnitFrame/TargetFrame.lua
-local MAX_BOSS_FRAMES = _G.MAX_BOSS_FRAMES or 5
+-- sourced from Blizzard_ArenaUI/Blizzard_ArenaUI.lua
+local MAX_ARENA_ENEMIES = _G.MAX_ARENA_ENEMIES or 5
 
--- sourced from Blizzard_FrameXMLBase/Shared/Constants.lua
-local MEMBERS_PER_RAID_GROUP = _G.MEMBERS_PER_RAID_GROUP or 5
+-- sourced from Blizzard_UnitFrame/TargetFrame.lua
+local MAX_BOSS_FRAMES = 8 -- blizzard can spawn more than the default 5 apparently
 
 local hookedFrames = {}
 local hookedNameplates = {}
 local isBossHooked = false
-local isPartyHooked = false
 
 local hiddenParent = CreateFrame('Frame', nil, UIParent)
 hiddenParent:SetAllPoints()
@@ -113,12 +112,33 @@ function oUF:DisableBlizzard(unit)
 	elseif(unit == 'focus') then
 		handleFrame(FocusFrame)
 	elseif(unit:match('boss%d?$')) then
-		local id = unit:match('boss(%d)')
-		if (id) then
-			handleFrame('Boss' .. id .. 'TargetFrame')
+		if(BossTargetFrameContainer) then
+			if(not isBossHooked) then
+				isBossHooked = true
+
+				-- it's needed because the layout manager can bring frames that are
+				-- controlled by containers back from the dead when a user chooses
+				-- to revert all changes
+				-- for now I'll just reparent it, but more might be needed in the
+				-- future, watch it
+				handleFrame(BossTargetFrameContainer)
+
+				-- do not reparent frames controlled by containers, the vert/horiz
+				-- layout code will go insane because it won't be able to calculate
+				-- the size properly, 0 or negative sizes in turn will break the
+				-- layout manager, fun...
+				for i = 1, MAX_BOSS_FRAMES do
+					handleFrame('Boss' .. i .. 'TargetFrame', true)
+				end
+			end
 		else
-			for i = 1, MAX_BOSS_FRAMES do
-				handleFrame(string.format('Boss%dTargetFrame', i))
+			local id = unit:match('boss(%d)')
+			if (id) then
+				handleFrame('Boss' .. id .. 'TargetFrame')
+			else
+				for i = 1, MAX_BOSS_FRAMES do
+					handleFrame(string.format('Boss%dTargetFrame', i))
+				end
 			end
 		end
 	elseif(unit:match('party%d?$')) then
@@ -129,6 +149,24 @@ function oUF:DisableBlizzard(unit)
 			for i = 1, MAX_PARTY_MEMBERS do
 				handleFrame(string.format('PartyMemberFrame%d', i))
 			end
+		end
+	elseif(unit:match('arena%d?$')) then
+		local id = unit:match('arena(%d)')
+		if (id) then
+			handleFrame('ArenaEnemyFrame' .. id)
+		else
+			for i = 1, MAX_ARENA_ENEMIES do
+				handleFrame(string.format('ArenaEnemyFrame%d', i))
+			end
+		end
+
+		-- Blizzard_ArenaUI should not be loaded
+		if(Arena_LoadUI) then
+			Arena_LoadUI = function() end
+		end
+
+		if(C_CVar.GetCVar('showArenaEnemyFrames')) then
+			C_CVar.SetCVar('showArenaEnemyFrames', '0')
 		end
 	elseif(unit:match('nameplate%d+$')) then
 		local frame = C_NamePlate.GetNamePlateForUnit(unit)

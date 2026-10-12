@@ -31,8 +31,6 @@ local oUF = ns.oUF
 local _FRAMES = {}
 local OnRangeFrame
 
-local UnitInRange, UnitIsConnected = UnitInRange, UnitIsConnected
-
 local function Update(self, event)
 	local element = self.Range
 	local unit = self.unit
@@ -114,6 +112,8 @@ local function Enable(self)
 		table.insert(_FRAMES, self)
 		OnRangeFrame:Show()
 
+		self:RegisterEvent('UNIT_IN_RANGE_UPDATE', Path)
+
 		return true
 	end
 end
@@ -127,7 +127,10 @@ local function Disable(self)
 				break
 			end
 		end
+
 		self:SetAlpha(element.insideAlpha)
+
+		self:UnregisterEvent('UNIT_IN_RANGE_UPDATE', Path)
 
 		if(#_FRAMES == 0) then
 			OnRangeFrame:Hide()
@@ -135,4 +138,4 @@ local function Disable(self)
 	end
 end
 
-oUF:AddElement('Range', nil, Enable, Disable)
+oUF:AddElement('Range', Path, Enable, Disable)

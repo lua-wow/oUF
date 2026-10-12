@@ -4,6 +4,19 @@ local Private = ns.oUF.Private
 -- deprecated: only defined while the loadDeprecationFallbacks CVar is set
 local ShowBossFrameWhenUninteractable = ShowBossFrameWhenUninteractable or UnitIsVisible
 
+-- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO or {
+	DRUID = {
+		[Enum.PowerType.LunarPower] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+	PRIEST = {
+		[Enum.PowerType.Insanity] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+	SHAMAN = {
+		[Enum.PowerType.Maelstrom] = { powerType = Enum.PowerType.Mana, powerName = "MANA" },
+	},
+}
+
 function Private.argcheck(value, num, ...)
 	assert(type(num) == 'number', "Bad argument #2 to 'argcheck' (number expected, got " .. type(num) .. ')')
 
@@ -72,4 +85,12 @@ function Private.isUnitEvent(event, unit)
 	end
 
 	return isOK
+end
+
+function Private.GetAltPowerBarDisplayInfo()
+	return ALT_POWER_BAR_PAIR_DISPLAY_INFO
+end
+
+function Private.HasAltPowerBar(class, powerType)
+	return ALT_POWER_BAR_PAIR_DISPLAY_INFO[class] and ALT_POWER_BAR_PAIR_DISPLAY_INFO[class][powerType]
 end

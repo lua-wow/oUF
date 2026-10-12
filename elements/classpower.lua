@@ -22,6 +22,10 @@ If the sub-widgets are StatusBars, their minimum and maximum values will be set 
 
 Supported class powers:
   - All     - Combo Points
+  - Mage    - Arcane Charges (MoP)
+  - Monk    - Chi Orbs (MoP)
+  - Paladin - Holy Power (MoP)
+  - Warlock - Soul Shards (MoP)
 
 ## Examples
 
@@ -45,9 +49,19 @@ local oUF = ns.oUF
 
 local _, PlayerClass = UnitClass('player')
 
+-- Blizzard
+local GetSpecialization = C_SpecializationInfo.GetSpecialization
+
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
+local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
+local SPEC_WARLOCK_DESTRUCTION = _G.SPEC_WARLOCK_DESTRUCTION or 3
+
 local SPELL_POWER_ENERGY = Enum.PowerType.Energy or 3
 local SPELL_POWER_COMBO_POINTS = Enum.PowerType.ComboPoints or 4
+local SPELL_POWER_SOUL_SHARDS = Enum.PowerType.SoulShards or 7
+local SPELL_POWER_HOLY_POWER = Enum.PowerType.HolyPower or 9
+local SPELL_POWER_CHI = Enum.PowerType.Chi or 12
+local SPELL_POWER_ARCANE_CHARGES = Enum.PowerType.ArcaneCharges or 16
 
 -- Holds the class specific stuff.
 local ClassPowerID, ClassPowerType
@@ -96,10 +110,15 @@ local function Update(self, event, unit, powerType)
 		element:PreUpdate()
 	end
 
-	local cur, max, mod, oldMax
+	local cur, max, mod, oldCur, oldMax
 	if(event ~= 'ClassPowerDisable') then
 		local powerID = unit == 'vehicle' and SPELL_POWER_COMBO_POINTS or ClassPowerID
-		cur = UnitPower(unit, powerID, true)
+		-- combo points are on the target (as Blizzard's ComboFrame); UnitPower keeps the previous target's on MoP
+		if(powerID == SPELL_POWER_COMBO_POINTS) then
+			cur = GetComboPoints(unit, 'target')
+		else
+			cur = UnitPower(unit, powerID, true)
+		end
 		max = UnitPowerMax(unit, powerID)
 		mod = UnitPowerDisplayMod(powerID)
 
@@ -108,6 +127,11 @@ local function Update(self, event, unit, powerType)
 
 		-- mod should never be 0, but according to Blizz code it can actually happen
 		cur = mod == 0 and 0 or cur / mod
+
+		-- BUG: Destruction is supposed to show partial soulshards, but Affliction and Demonology should only show full ones
+		if(ClassPowerType == 'SOUL_SHARDS' and GetSpecialization() ~= SPEC_WARLOCK_DESTRUCTION) then
+			cur = cur - cur % 1
+		end
 
 		local numActive = cur + 0.9
 		for i = 1, max do
@@ -119,6 +143,9 @@ local function Update(self, event, unit, powerType)
 				element[i]:SetValue(cur - i + 1)
 			end
 		end
+
+		oldCur = element.__cur
+		element.__cur = cur
 
 		oldMax = element.__max
 		if(max ~= oldMax) then
@@ -132,18 +159,18 @@ local function Update(self, event, unit, powerType)
 			element.__max = max
 		end
 	end
-	--[[ Callback: ClassPower:PostUpdate(cur, max, hasMaxChanged, powerType)
-	Called after the element has been updated.
+	--[[ Callback: ClassPower:PostUpdate(cur, max, hasCurChanged, hasMaxChanged, powerType)
+	Called after the element has been updated (same signature as Retail oUF).
 
 	* self          - the ClassPower element
 	* cur           - the current amount of power (number)
 	* max           - the maximum amount of power (number)
+	* hasCurChanged - indicates whether the current amount has changed since the last update (boolean)
 	* hasMaxChanged - indicates whether the maximum amount has changed since the last update (boolean)
 	* powerType     - the active power type (string)
-	* ...           - the indices of currently charged power points, if any
 	--]]
 	if(element.PostUpdate) then
-		return element:PostUpdate(cur, max, oldMax ~= max, powerType)
+		return element:PostUpdate(cur, max, oldCur ~= cur, oldMax ~= max, powerType)
 	end
 end
 
@@ -177,17 +204,20 @@ local function Visibility(self, event, unit)
 	local shouldEnable
 
 	if(UnitHasVehicleUI('player')) then
-		shouldEnable = PlayerVehicleHasComboPoints()
+		shouldEnable = PlayerVehicleHasComboPoints and PlayerVehicleHasComboPoints() or false
 		unit = 'vehicle'
 	elseif(ClassPowerID) then
-		-- use 'player' instead of unit because 'SPELLS_CHANGED' is a unitless event
-		if(not RequirePower or RequirePower == UnitPowerType('player')) then
-			if(not RequireSpell or IsPlayerSpell(RequireSpell)) then
-				self:UnregisterEvent('SPELLS_CHANGED', Visibility)
-				shouldEnable = true
-				unit = 'player'
-			else
-				self:RegisterEvent('SPELLS_CHANGED', Visibility, true)
+		-- RequireSpec is a spec index, as GetSpecialization (Mists compared it to GetInspectSpecialization's spec ID)
+		if(not RequireSpec or RequireSpec == GetSpecialization()) then
+			-- use 'player' instead of unit because 'SPELLS_CHANGED' is a unitless event
+			if(not RequirePower or RequirePower == UnitPowerType('player')) then
+				if(not RequireSpell or IsPlayerSpell(RequireSpell)) then
+					self:UnregisterEvent('SPELLS_CHANGED', Visibility)
+					shouldEnable = true
+					unit = 'player'
+				else
+					self:RegisterEvent('SPELLS_CHANGED', Visibility, true)
+				end
 			end
 		end
 	end
@@ -276,7 +306,17 @@ do
 		Path(self, 'ClassPowerDisable', 'player', ClassPowerType)
 	end
 
-	if(PlayerClass == 'ROGUE' or PlayerClass == 'DRUID') then
+	-- chi, holy power, soul shards and arcane charges are MoP game content
+	if(oUF.isMoP and PlayerClass == 'MONK') then
+		ClassPowerID = SPELL_POWER_CHI
+		ClassPowerType = 'CHI'
+	elseif(oUF.isMoP and PlayerClass == 'PALADIN') then
+		ClassPowerID = SPELL_POWER_HOLY_POWER
+		ClassPowerType = 'HOLY_POWER'
+	elseif(oUF.isMoP and PlayerClass == 'WARLOCK') then
+		ClassPowerID = SPELL_POWER_SOUL_SHARDS
+		ClassPowerType = 'SOUL_SHARDS'
+	elseif(PlayerClass == 'ROGUE' or PlayerClass == 'DRUID') then
 		ClassPowerID = SPELL_POWER_COMBO_POINTS
 		ClassPowerType = 'COMBO_POINTS'
 
@@ -284,6 +324,10 @@ do
 			RequirePower = SPELL_POWER_ENERGY
 			RequireSpell = 5221 -- Shred
 		end
+	elseif(oUF.isMoP and PlayerClass == 'MAGE') then
+		ClassPowerID = SPELL_POWER_ARCANE_CHARGES
+		ClassPowerType = 'ARCANE_CHARGES'
+		RequireSpec = SPEC_MAGE_ARCANE
 	end
 end
 
