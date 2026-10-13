@@ -106,7 +106,3 @@ end
 function Private.GetAltPowerBarDisplayInfo()
 	return ALT_POWER_BAR_PAIR_DISPLAY_INFO
 end
-
-function Private.HasAltPowerBar(class, powerType)
-	return ALT_POWER_BAR_PAIR_DISPLAY_INFO[class] and ALT_POWER_BAR_PAIR_DISPLAY_INFO[class][powerType]
-end
