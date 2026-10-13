@@ -25,8 +25,8 @@ At least one of the above widgets must be present for the element to work.
 .spacing                  - Spacing between each button. Defaults to 0 (number)
 .['spacing-x']            - Horizontal spacing between each button. Takes priority over `spacing` (number)
 .['spacing-y']            - Vertical spacing between each button. Takes priority over `spacing` (number)
-.['growth-x']             - Horizontal growth direction. Defaults to 'RIGHT' (string)
-.['growth-y']             - Vertical growth direction. Defaults to 'UP' (string)
+.growthX                  - Horizontal growth direction. Defaults to 'RIGHT' (string)
+.growthY                  - Vertical growth direction. Defaults to 'UP' (string)
 .initialAnchor            - Anchor point for the aura buttons. Defaults to 'BOTTOMLEFT' (string)
 .filter                   - Custom filter list for auras to display. Defaults to 'HELPFUL' for buffs and 'HARMFUL' for
                             debuffs (string)
@@ -154,8 +154,8 @@ local function SetPosition(element, from, to)
 	local sizex = width + (element['spacing-x'] or element.spacing or 0)
 	local sizey = height + (element['spacing-y'] or element.spacing or 0)
 	local anchor = element.initialAnchor or 'BOTTOMLEFT'
-	local growthx = (element['growth-x'] == 'LEFT' and -1) or 1
-	local growthy = (element['growth-y'] == 'DOWN' and -1) or 1
+	local growthx = (element.growthX == 'LEFT' and -1) or 1
+	local growthy = (element.growthY == 'DOWN' and -1) or 1
 	local cols = math.floor(element:GetWidth() / sizex + 0.5)
 
 	for i = from, to do
