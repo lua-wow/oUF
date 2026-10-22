@@ -140,7 +140,7 @@ local UnitSelectionColor = Private.UnitSelectionColor
 local SmoothColor = Private.SmoothColor
 
 local function UpdateColor(self, event, unit)
-	if(not unit or self.unit ~= unit) then return end
+	if(not unit or self.__unit ~= unit) then return end
 	local element = self.Health
 
 	local selectionColor = UnitSelectionColor(unit, element.considerSelectionInCombatHostile)
@@ -206,7 +206,7 @@ local function ColorPath(self, ...)
 end
 
 local function Update(self, event, unit)
-	if(not unit or self.unit ~= unit) then return end
+	if(not unit or self.__unit ~= unit) then return end
 	local element = self.Health
 
 	--[[ Callback: Health:PreUpdate(unit)
@@ -366,7 +366,7 @@ local function ForceUpdate(element)
 	STATE[element].horizontal = nil
 	STATE[element].size = nil
 
-	Path(element.__owner, 'ForceUpdate', element.__owner.unit)
+	Path(element.__owner, 'ForceUpdate', element.__owner.__unit)
 end
 
 --[[ Health:SetColorDisconnected(state, isForced)

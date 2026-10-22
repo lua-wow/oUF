@@ -40,7 +40,7 @@ local _, ns = ...
 local oUF = ns.oUF
 
 local function Update(self, event, unit)
-	if(not unit or not UnitIsUnit(self.unit, unit)) then return end
+	if(not unit or not UnitIsUnit(self.__unit, unit)) then return end
 
 	local element = self.Portrait
 
@@ -113,7 +113,7 @@ local function Path(self, ...)
 end
 
 local function ForceUpdate(element)
-	return Path(element.__owner, 'ForceUpdate', element.__owner.unit)
+	return Path(element.__owner, 'ForceUpdate', element.__owner.__unit)
 end
 
 local function Enable(self, unit)

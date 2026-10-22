@@ -33,7 +33,7 @@ local OnRangeFrame
 
 local function Update(self, event)
 	local element = self.Range
-	local unit = self.unit
+	local unit = self.__unit
 
 	--[[ Callback: Range:PreUpdate()
 	Called before the element has been updated.

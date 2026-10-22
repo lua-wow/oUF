@@ -33,7 +33,7 @@ local function Update(self, event)
 		element:PreUpdate()
 	end
 
-	local isTargeted = UnitIsUnit(self.unit, 'target')
+	local isTargeted = UnitIsUnit(self.__unit, 'target')
 	element:SetShown(isTargeted)
 
 	--[[ Callback: TargetIndicator:PostUpdate(isTargeted)

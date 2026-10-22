@@ -121,7 +121,7 @@ type and zero for the minimum value.
 * self - the Power element
 --]]
 local function GetDisplayPower(element)
-	local unit = element.__owner.unit
+	local unit = element.__owner.__unit
 	local barInfo = GetUnitPowerBarInfo(unit)
 	if(barInfo and barInfo.showOnRaid and (UnitInParty(unit) or UnitInRaid(unit))) then
 		return ALTERNATE_POWER_INDEX, barInfo.minPower
@@ -129,7 +129,7 @@ local function GetDisplayPower(element)
 end
 
 local function UpdateColor(self, event, unit)
-	if(self.unit ~= unit) then return end
+	if(self.__unit ~= unit) then return end
 	local element = self.Power
 
 	local pType, pToken, altR, altG, altB = UnitPowerType(unit)
@@ -232,7 +232,7 @@ local function ColorPath(self, ...)
 end
 
 local function Update(self, event, unit)
-	if(self.unit ~= unit) then return end
+	if(self.__unit ~= unit) then return end
 	local element = self.Power
 
 	--[[ Callback: Power:PreUpdate(unit)
@@ -280,7 +280,7 @@ local function Update(self, event, unit)
 end
 
 local function UpdatePrediction(self, event, unit)
-	if(self.unit ~= unit) then return end
+	if(self.__unit ~= unit) then return end
 
 	local element = self.Power
 
@@ -404,10 +404,10 @@ local function PredictionPath(self, ...)
 end
 
 local function ForceUpdate(element)
-	Path(element.__owner, 'ForceUpdate', element.__owner.unit)
+	Path(element.__owner, 'ForceUpdate', element.__owner.__unit)
 
 	if(element.CostPrediction) then
-		PredictionPath(element.__owner, 'ForceUpdate', element.__owner.unit)
+		PredictionPath(element.__owner, 'ForceUpdate', element.__owner.__unit)
 	end
 end
 

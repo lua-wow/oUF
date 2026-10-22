@@ -131,9 +131,9 @@ local function UpdatePips(element, numStages)
 	for stage = 1, numStages do
 		local duration
 		if(stage > numStages) then
-			duration = GetUnitEmpowerHoldAtMaxTime(element.__owner.unit)
+			duration = GetUnitEmpowerHoldAtMaxTime(element.__owner.__unit)
 		else
-			duration = GetUnitEmpowerStageDuration(element.__owner.unit, stage - 1)
+			duration = GetUnitEmpowerStageDuration(element.__owner.__unit, stage - 1)
 		end
 
 		if(duration > CASTBAR_STAGE_DURATION_INVALID) then
@@ -208,7 +208,7 @@ Defaults to the object unit.
 * unit - the unit for which the update has been triggered (string)
 --]]
 local function ShouldShow(element, unit)
-	return element.__owner.unit == unit
+	return element.__owner.__unit == unit
 end
 
 local function CastStart(self, event, unit)
@@ -470,7 +470,7 @@ local function onUpdate(self, elapsed)
 				self:Hide()
 
 				if(self.PostCastStop) then
-					self:PostCastStop(self.__owner.unit, spellID)
+					self:PostCastStop(self.__owner.__unit, spellID)
 				end
 
 				return
@@ -484,7 +484,7 @@ local function onUpdate(self, elapsed)
 				self:Hide()
 
 				if(self.PostCastStop) then
-					self:PostCastStop(self.__owner.unit, spellID)
+					self:PostCastStop(self.__owner.__unit, spellID)
 				end
 
 				return
@@ -544,7 +544,7 @@ local function Update(...)
 end
 
 local function ForceUpdate(element)
-	return Update(element.__owner, 'ForceUpdate', element.__owner.unit)
+	return Update(element.__owner, 'ForceUpdate', element.__owner.__unit)
 end
 
 local function Enable(self, unit)
@@ -570,7 +570,7 @@ local function Enable(self, unit)
 
 		element:SetScript('OnUpdate', element.OnUpdate or onUpdate)
 
-		if(self.unit == 'player' and not (self.hasChildren or self.isChild or self.isNamePlate)) then
+		if(self.__unit == 'player' and not (self.hasChildren or self.isChild or self.isNamePlate)) then
 			if CastingBarFrame_SetUnit == nil then
 				PlayerCastingBarFrame:UnregisterAllEvents()
 				PlayerCastingBarFrame:Hide()
@@ -625,7 +625,7 @@ local function Disable(self)
 
 		element:SetScript('OnUpdate', nil)
 
-		if(self.unit == 'player' and not (self.hasChildren or self.isChild or self.isNamePlate)) then
+		if(self.__unit == 'player' and not (self.hasChildren or self.isChild or self.isNamePlate)) then
 			PlayerCastingBarFrame:OnLoad()
 			PetCastingBarFrame:OnLoad()
 		end
