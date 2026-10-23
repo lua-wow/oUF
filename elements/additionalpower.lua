@@ -152,7 +152,7 @@ local function Update(self, event, unit, powerType)
 end
 
 local function UpdatePrediction(self, event, unit)
-	if(self.unit ~= unit) then return end
+	if(self.__unit ~= unit) then return end
 
 	local element = self.AdditionalPower
 
@@ -373,10 +373,10 @@ local function VisibilityPath(self, ...)
 end
 
 local function ForceUpdate(element)
-	VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.unit)
+	VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.__unit)
 
 	if(element.__isEnabled and element.CostPrediction) then
-		PredictionPath(element.__owner, 'ForceUpdate', element.__owner.unit)
+		PredictionPath(element.__owner, 'ForceUpdate', element.__owner.__unit)
 	end
 end
 

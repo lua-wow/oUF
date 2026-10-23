@@ -23,6 +23,7 @@ read_globals = {
 	'debugstack',
 	'geterrorhandler',
 	'hooksecurefunc',
+	'issecretvalue',
 	string = {fields = {'join', 'split', 'trim'}},
 	table = {fields = {'removemulti', 'wipe'}},
 
@@ -51,6 +52,7 @@ read_globals = {
 	'PlayerCastingBarFrame',
 	'PlayerFrame',
 	'PlayerPowerBarAlt',
+	'SPEC_MONK_MISTWEAVER',
 	'TargetFrame',
 	'TargetFrameToT',
 	'TargetofFocusFrame',
@@ -78,6 +80,7 @@ read_globals = {
 	-- API
 	'CopyTable',
 	'CreateFrame',
+	'CreateUnitHealPredictionCalculator',
 	'GetAddOnMetadata',
 	'GetArenaOpponentSpec',
 	'GetComboPoints',
@@ -131,6 +134,7 @@ read_globals = {
 	'UnitExists',
 	'UnitFactionGroup',
 	'UnitGUID',
+	'UnitGetDetailedHealPrediction',
 	'UnitGetIncomingHeals',
 	'UnitGetTotalAbsorbs',
 	'UnitGetTotalHealAbsorbs',

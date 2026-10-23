@@ -48,7 +48,7 @@ local function Update(self, event)
 		element:PreUpdate()
 	end
 
-	local role = UnitGroupRolesAssigned(self.unit)
+	local role = UnitGroupRolesAssigned(self.__unit)
 	if(role == 'TANK' or role == 'HEALER' or role == 'DAMAGER') then
 		element:SetTexCoord(GetTexCoordsForRoleSmallCircle(role))
 		element:Show()
@@ -88,7 +88,7 @@ local function Enable(self)
 		element.__owner = self
 		element.ForceUpdate = ForceUpdate
 
-		if(self.unit == 'player') then
+		if(self.__unit == 'player') then
 			self:RegisterEvent('PLAYER_ROLES_ASSIGNED', Path, true)
 		else
 			self:RegisterEvent('GROUP_ROSTER_UPDATE', Path, true)

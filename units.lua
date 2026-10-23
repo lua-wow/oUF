@@ -115,7 +115,7 @@ local function updateArenaPreparation(self, event)
 		if(self.Portrait and self:IsElementEnabled('Portrait')) then
 			self.Portrait:Show()
 		end
-	elseif(event == 'PLAYER_ENTERING_WORLD' and not UnitExists(self.unit)) then
+	elseif(event == 'PLAYER_ENTERING_WORLD' and not UnitExists(self.__unit)) then
 		-- semi-recursive call for when the player zones into an arena
 		updateArenaPreparation(self, 'ARENA_PREP_OPPONENT_SPECIALIZATIONS')
 	elseif(event == 'ARENA_PREP_OPPONENT_SPECIALIZATIONS') then
@@ -129,13 +129,12 @@ local function updateArenaPreparation(self, event)
 			self:PreUpdate(event)
 		end
 
-		local id = tonumber(self.id)
-		if(not self:IsEnabled() and GetNumArenaOpponentSpecs() < id) then
+		if(not self:IsEnabled() and GetNumArenaOpponentSpecs() < self.__unitIndex) then
 			-- hide the object if the opponent leaves
 			self:Hide()
 		end
 
-		local specID = GetArenaOpponentSpec(id)
+		local specID = GetArenaOpponentSpec(self.__unitIndex)
 		if(specID) then
 			if(self:IsEnabled()) then
 				-- disable the unit watch so we can forcefully show the object ourselves
@@ -173,7 +172,7 @@ end
 
 -- Handles unit specific actions.
 function oUF:HandleUnit(object, unit)
-	unit = object.unit or unit
+	unit = object.__unit or unit
 	if(unit == 'target') then
 		object:RegisterEvent('PLAYER_TARGET_CHANGED', object.UpdateAllElements, true)
 	elseif(unit == 'mouseover') then
@@ -208,7 +207,7 @@ local function createOnUpdate(timer)
 			self.elapsed = (self.elapsed or 0) + elapsed
 			if(self.elapsed > timer) then
 				for _, object in next, objects do
-					if(object:IsVisible() and object.unit and unitExists(object.unit)) then
+					if(object:IsVisible() and object.__unit and unitExists(object.__unit)) then
 						object:UpdateAllElements('OnUpdate')
 					end
 				end

@@ -196,7 +196,7 @@ local function ComboPointPath(self, ...)
 	* ...   - the arguments accompanying the event
 	--]]
 	local event = ...
-	return Path(self, event, self.unit, 'COMBO_POINTS')
+	return Path(self, event, self.__unit, 'COMBO_POINTS')
 end
 
 local function Visibility(self, event, unit)
@@ -270,7 +270,7 @@ local function VisibilityPath(self, ...)
 end
 
 local function ForceUpdate(element)
-	return VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.unit)
+	return VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.__unit)
 end
 
 do

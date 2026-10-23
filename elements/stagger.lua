@@ -52,7 +52,7 @@ local STAGGER_YELLOW_INDEX = _G.STAGGER_YELLOW_INDEX or 2
 local STAGGER_RED_INDEX = _G.STAGGER_RED_INDEX or 3
 
 local function UpdateColor(self, event, unit)
-	if(unit and unit ~= self.unit) then return end
+	if(unit and unit ~= self.__unit) then return end
 	local element = self.Stagger
 
 	local colors = self.colors.power[BREWMASTER_POWER_BAR_NAME]
@@ -93,7 +93,7 @@ local function UpdateColor(self, event, unit)
 end
 
 local function Update(self, event, unit)
-	if(unit and unit ~= self.unit) then return end
+	if(unit and unit ~= self.__unit) then return end
 
 	local element = self.Stagger
 
@@ -191,7 +191,7 @@ local function VisibilityPath(self, ...)
 end
 
 local function ForceUpdate(element)
-	VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.unit)
+	VisibilityPath(element.__owner, 'ForceUpdate', element.__owner.__unit)
 end
 
 local function Enable(self, unit)
