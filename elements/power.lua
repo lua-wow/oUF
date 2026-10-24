@@ -47,9 +47,9 @@ The following options are listed by priority. The first check that returns true 
 .colorClassNPC     - Use `self.colors.class[class]` to color the bar if the unit is a NPC (boolean)
 .colorClassPet     - Use `self.colors.class[class]` to color the bar if the unit is player controlled, but not a player
                      (boolean)
-.colorSelection    - Use `self.colors.selection[selection]` to color the bar based on the unit's outline/highlight
-                     color. `selection` is defined by the return value of Private.unitSelectionType, a wrapper function
-                     for [UnitSelectionType](https://warcraft.wiki.gg/wiki/API_UnitSelectionType) (boolean)
+.colorSelection    - Use the unit's outline/highlight color to color the bar, as returned by Private.unitSelectionColor,
+                     a wrapper function for [UnitSelectionColor](https://warcraft.wiki.gg/wiki/API_UnitSelectionColor)
+                     (boolean)
 .colorReaction     - Use `self.colors.reaction[reaction]` to color the bar based on the player's reaction towards the
                      unit. `reaction` is defined by the return value of
                      [UnitReaction](https://warcraft.wiki.gg/wiki/API_UnitReaction) (boolean)
@@ -90,7 +90,7 @@ local Private = oUF.Private
 local STATE = {}
 
 local unitIsUnit = Private.unitIsUnit
-local unitSelectionType = Private.unitSelectionType
+local unitSelectionColor = Private.unitSelectionColor
 
 --[[ Override: Power:GetDisplayPower(unit)
 Used to get info on the unit's alternative power, if any.
@@ -113,6 +113,8 @@ end
 local function UpdateColor(self, event, unit)
 	if(self.__unit ~= unit) then return end
 	local element = self.Power
+
+	local selectionColor = unitSelectionColor(unit, element.considerSelectionInCombatHostile)
 
 	local r, g, b, color, atlas
 	if(element.colorDisconnected and not UnitIsConnected(unit)) then
@@ -161,8 +163,8 @@ local function UpdateColor(self, event, unit)
 		else
 			color = self.colors.class[class]
 		end
-	elseif(element.colorSelection and unitSelectionType(unit, element.considerSelectionInCombatHostile)) then
-		color = self.colors.selection[unitSelectionType(unit, element.considerSelectionInCombatHostile)]
+	elseif(element.colorSelection and selectionColor) then
+		color = selectionColor
 	elseif(element.colorReaction and UnitReaction(unit, 'player')) then
 		color = self.colors.reaction[UnitReaction(unit, 'player')]
 	end

@@ -48,6 +48,18 @@ function Private.setRolesets(frame, set, doNotReparent)
 	end
 end
 
+-- Classic has no UnitSelectionType; use UnitSelectionColor
+function Private.unitSelectionColor(unit, considerHostile)
+	if(considerHostile and UnitThreatSituation('player', unit)) then
+		return oUF.colors.selection[oUF.Enum.SelectionType.Hostile]
+	end
+
+	local r, g, b = UnitSelectionColor(unit, true)
+	if(r) then
+		return oUF:CreateColor(r, g, b)
+	end
+end
+
 -- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua: the mana bar shows while druids (WotLK,
 -- MoP) and monks (MoP) display another power; Era and TBC have no such bar
 local altPowerBarPairDisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO

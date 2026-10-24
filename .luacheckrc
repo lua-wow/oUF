@@ -182,6 +182,7 @@ read_globals = {
 	'UnitPvpClassification',
 	'UnitRace',
 	'UnitReaction',
+	'UnitSelectionColor',
 	'UnitSelectionType',
 	'UnitStagger',
 	'UnitThreatSituation',
