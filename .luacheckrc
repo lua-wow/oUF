@@ -195,6 +195,7 @@ read_globals = {
 	'scrubsecretvalues',
 
 	-- Classic
+	'RAID_CLASS_COLORS',
 	'WOW_PROJECT_BURNING_CRUSADE_CLASSIC',
 	'WOW_PROJECT_CATACLYSM_CLASSIC',
 	'WOW_PROJECT_CLASSIC',
