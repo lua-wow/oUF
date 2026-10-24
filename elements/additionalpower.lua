@@ -62,6 +62,9 @@ local playerClass = UnitClassBase('player')
 -- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
 local ALT_POWER_BAR_PAIR_DISPLAY_INFO = Private.altPowerBarPairDisplayInfo
 
+-- Classic: Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua shows the MoP monk mana bar only as Mistweaver
+local SPEC_RESTRICTION = Private.GameVersion.Mists and playerClass == 'MONK' and (_G.SPEC_MONK_MISTWEAVER or 2)
+
 local ADDITIONAL_POWER_BAR_NAME = 'MANA'
 local ADDITIONAL_POWER_BAR_INDEX = 0
 
@@ -303,7 +306,7 @@ local function Visibility(self, event, unit)
 	local element = self.AdditionalPower
 	local shouldEnable
 
-	if(not UnitHasVehicleUI('player')) then
+	if(not UnitHasVehicleUI('player') and (not SPEC_RESTRICTION or C_SpecializationInfo.GetSpecialization() == SPEC_RESTRICTION)) then
 		if(UnitPowerMax(unit, ADDITIONAL_POWER_BAR_INDEX) ~= 0) then
 			if(element.displayPairs[playerClass]) then
 				local powerType = UnitPowerType(unit)
@@ -391,6 +394,10 @@ local function Enable(self, unit)
 
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 
+		if(SPEC_RESTRICTION) then
+			self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		end
+
 		if(not element.displayPairs) then
 			element.displayPairs = CopyTable(ALT_POWER_BAR_PAIR_DISPLAY_INFO)
 		end
@@ -417,6 +424,10 @@ local function Disable(self)
 		ElementDisable(self)
 
 		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
+
+		if(SPEC_RESTRICTION) then
+			self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		end
 	end
 end
 
