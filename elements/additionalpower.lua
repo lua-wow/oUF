@@ -60,7 +60,7 @@ local unitIsUnit = Private.unitIsUnit
 local playerClass = UnitClassBase('player')
 
 -- sourced from Blizzard_UnitFrame/AlternatePowerBar.lua
-local ALT_POWER_BAR_PAIR_DISPLAY_INFO = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+local ALT_POWER_BAR_PAIR_DISPLAY_INFO = Private.altPowerBarPairDisplayInfo
 
 local ADDITIONAL_POWER_BAR_NAME = 'MANA'
 local ADDITIONAL_POWER_BAR_INDEX = 0
