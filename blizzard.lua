@@ -10,12 +10,16 @@ local MAX_BOSS_FRAMES = _G.MAX_BOSS_FRAMES or 5
 -- sourced from Blizzard_FrameXMLBase/Shared/Constants.lua
 local MEMBERS_PER_RAID_GROUP = _G.MEMBERS_PER_RAID_GROUP or 5
 
+-- sourced from Blizzard_ArenaUI/Blizzard_ArenaUI.lua (Classic)
+local MAX_ARENA_ENEMIES = _G.MAX_ARENA_ENEMIES or 5
+
 local isPlayerHooked = false
 local isArenaHooked = false
 local isBossHooked = false
 local isPartyHooked = false
+local hookedNameplates = {}
 
-local function handleFrame(baseName)
+local function handleFrame(baseName, doNotReparent)
 	local frame
 	if(type(baseName) == 'string') then
 		frame = _G[baseName]
@@ -25,7 +29,7 @@ local function handleFrame(baseName)
 
 	if(frame) then
 		frame:UnregisterAllEvents()
-		frame:SetRolesets('alwaysBlocked')
+		Private.setRolesets(frame, 'alwaysBlocked', doNotReparent)
 
 		local health = frame.healthBar or frame.healthbar or frame.HealthBar or (frame.HealthBarsContainer and frame.HealthBarsContainer.healthBar)
 		if(health) then
@@ -74,6 +78,16 @@ local function handleFrame(baseName)
 	end
 end
 
+local function insecureHide(self)
+	self:Hide()
+end
+
+local function hideArenaFrames()
+	for i = 1, MAX_ARENA_ENEMIES do
+		handleFrame('ArenaEnemyFrame' .. i)
+	end
+end
+
 function oUF:DisableBlizzard(unit)
 	if(not unit) then return end
 
@@ -99,6 +113,7 @@ function oUF:DisableBlizzard(unit)
 		handleFrame(PetFrame)
 	elseif(unit == 'target') then
 		handleFrame(TargetFrame)
+		handleFrame(ComboFrame) -- Classic
 	elseif(unit == 'focus') then
 		handleFrame(FocusFrame)
 	elseif(unit:match('boss%d?$')) then
@@ -123,7 +138,7 @@ function oUF:DisableBlizzard(unit)
 			handleFrame(PartyFrame)
 
 			for frame in PartyFrame.PartyMemberFramePool:EnumerateActive() do
-				handleFrame(frame)
+				handleFrame(frame, true)
 			end
 
 			for i = 1, MEMBERS_PER_RAID_GROUP do
@@ -149,10 +164,40 @@ function oUF:DisableBlizzard(unit)
 				for _, frame in next, ArenaEnemyMatchFramesContainer.UnitFrames do
 					handleFrame(frame)
 				end
+			else
+				-- Classic arena frames, Blizzard_ArenaUI is load-on-demand
+				C_CVar.SetCVar('showArenaEnemyFrames', '0')
+
+				if(C_AddOns.IsAddOnLoaded('Blizzard_ArenaUI')) then
+					hideArenaFrames()
+				else
+					local f = CreateFrame('Frame')
+					f:RegisterEvent('ADDON_LOADED')
+					f:SetScript('OnEvent', function(_, _, name)
+						if(name == 'Blizzard_ArenaUI') then
+							f:UnregisterAllEvents()
+							hideArenaFrames()
+						end
+					end)
+				end
 			end
 		end
 	elseif(unit:match('nameplate%d?%d?%d?$')) then
 		local frame = C_NamePlate.GetNamePlateForUnit(unit)
-		handleFrame(frame.UnitFrame)
+		local unitFrame = frame and frame.UnitFrame
+		if(not unitFrame or unitFrame:IsForbidden()) then return end
+
+		if(unitFrame.SetRolesets) then
+			handleFrame(unitFrame)
+		else
+			-- Classic: Blizzard pools nameplate unit frames and re-shows them on reuse
+			if(not hookedNameplates[unitFrame]) then
+				unitFrame:HookScript('OnShow', insecureHide)
+
+				hookedNameplates[unitFrame] = true
+			end
+
+			handleFrame(unitFrame, true)
+		end
 	end
 end
