@@ -48,6 +48,31 @@ function Private.setRolesets(frame, set, doNotReparent)
 	end
 end
 
+-- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua: the mana bar shows while druids (WotLK,
+-- MoP) and monks (MoP) display another power; Era and TBC have no such bar
+local altPowerBarPairDisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
+if(not altPowerBarPairDisplayInfo) then
+	local GameVersion = Private.GameVersion
+	local mana = { powerType = Enum.PowerType.Mana, powerName = 'MANA' }
+
+	altPowerBarPairDisplayInfo = {}
+
+	if(GameVersion.Wrath or GameVersion.Mists) then
+		altPowerBarPairDisplayInfo.DRUID = {
+			[Enum.PowerType.Rage] = mana,
+			[Enum.PowerType.Energy] = mana,
+		}
+	end
+
+	if(GameVersion.Mists) then
+		altPowerBarPairDisplayInfo.MONK = {
+			[Enum.PowerType.Energy] = mana,
+		}
+	end
+end
+
+Private.altPowerBarPairDisplayInfo = altPowerBarPairDisplayInfo
+
 -- without SetRolesets, frames hide in pet battles through a secure parent instead
 if(UIParent.SetRolesets) then
 	Private.unitFrameParent = UIParent
