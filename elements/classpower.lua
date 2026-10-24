@@ -52,6 +52,19 @@ local GameCompatibility = Private.GameCompatibility
 
 local playerClass = UnitClassBase('player')
 
+-- Classic has no charged combo points or class talents
+local GetUnitChargedPowerPoints = GetUnitChargedPowerPoints or nop
+
+-- Classic: vehicles have combo points unless the player ignores them, as Blizzard's Classic/ComboFrame.lua
+local PlayerVehicleHasComboPoints = PlayerVehicleHasComboPoints or function()
+	return not UnitIgnoresVehicleComboPoints('player')
+end
+local hasPowerPointCharge = Private.eventExists('UNIT_POWER_POINT_CHARGE')
+
+-- before Warlords combo points belong to the target, as in Blizzard's Classic/ComboFrame.lua;
+-- on MoP UnitPower keeps the previous target's points
+local GetTargetComboPoints = not GameCompatibility.Warlords and GetComboPoints
+
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
 local SPEC_DEMONHUNTER_DEVOURER = _G.SPEC_DEMONHUNTER_DEVOURER or 3
 local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
@@ -101,6 +114,10 @@ local function GetGenericPowerColor(element, powerType)
 end
 
 local function GetComboPoints(unit)
+	if(GetTargetComboPoints) then
+		return GetTargetComboPoints(unit, 'target')
+	end
+
 	return UnitPower(unit, Enum.PowerType.ComboPoints), GetUnitChargedPowerPoints(unit)
 end
 
@@ -242,7 +259,8 @@ elseif(playerClass == 'MONK') then
 	end
 
 	GetPowerInfo = function()
-		if(C_SpecializationInfo.GetSpecialization() == SPEC_MONK_WINDWALKER) then
+		-- before Legion every monk spec has chi, as the chi tag
+		if(C_SpecializationInfo.GetSpecialization() == SPEC_MONK_WINDWALKER or not GameCompatibility.Legion) then
 			return POWER_TYPE_CHI, Enum.PowerType.Chi
 		end
 	end
@@ -345,9 +363,10 @@ local function Update(self, event, unit, powerType)
 	local element = self.ClassPower
 	if(not unit) then
 		return
-	elseif(unit == 'vehicle' and powerType ~= POWER_TYPE_COMBO_POINTS) then
+	elseif(unit == 'vehicle' and (powerType ~= POWER_TYPE_COMBO_POINTS or not UnitHasVehicleUI('player'))) then
 		return
-	elseif(not unitIsUnit(unit, 'player')) then -- is this redundant?
+	-- UnitIsUnit('vehicle', 'player') is false on Classic
+	elseif(unit ~= 'vehicle' and not unitIsUnit(unit, 'player')) then -- is this redundant?
 		return
 	elseif(event == 'UNIT_AURA' or event == 'UNIT_POWER_POINT_CHARGE') then
 		-- fake the power type for events that don't provide any
@@ -425,6 +444,10 @@ local function Path(self, ...)
 	* ...   - the arguments accompanying the event
 	--]]
 	return (self.ClassPower.Override or Update) (self, ...)
+end
+
+local function TargetComboPointsPath(self, event)
+	return Path(self, event, UnitHasVehicleUI('player') and 'vehicle' or 'player', POWER_TYPE_COMBO_POINTS)
 end
 
 local function Visibility(self, event, unit)
@@ -519,12 +542,19 @@ do
 			self:RegisterEvent('UNIT_POWER_UPDATE', Path)
 
 			-- according to Blizz any class may receive this event due to specific spell auras
-			self:RegisterEvent('UNIT_POWER_POINT_CHARGE', Path)
+			if(hasPowerPointCharge) then
+				self:RegisterEvent('UNIT_POWER_POINT_CHARGE', Path)
+			end
 		end
 
 		self:RegisterEvent('SPELLS_CHANGED', ColorPath, true)
 
 		local element = self.ClassPower
+		if(GetTargetComboPoints and STATE[element].powerType == POWER_TYPE_COMBO_POINTS) then
+			self:RegisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath, true)
+			self:RegisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath, true)
+		end
+
 		STATE[element].enabled = true
 
 		if(UnitHasVehicleUI('player')) then
@@ -540,6 +570,8 @@ do
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
 		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
 		self:UnregisterEvent('SPELLS_CHANGED', ColorPath)
+		self:UnregisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath)
+		self:UnregisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath)
 
 		if(not unregisterOnly) then
 			local element = self.ClassPower
@@ -563,7 +595,9 @@ local function Enable(self, unit)
 		STATE[element] = {}
 
 		self:RegisterEvent('PLAYER_LEVEL_UP', VisibilityPath, true)
-		self:RegisterEvent('TRAIT_CONFIG_UPDATED', VisibilityPath, true)
+		if(C_ClassTalents) then
+			self:RegisterEvent('TRAIT_CONFIG_UPDATED', VisibilityPath, true)
+		end
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 
 		element.ClassPowerEnable = ClassPowerEnable
