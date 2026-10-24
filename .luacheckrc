@@ -64,6 +64,7 @@ read_globals = {
 	'C_ColorUtil',
 	'C_CurveUtil',
 	'C_DurationUtil',
+	'C_EventUtils',
 	'C_IncomingSummon',
 	'C_NamePlate',
 	'C_NamePlateManager',
@@ -191,4 +192,13 @@ read_globals = {
 	'hooksecurefunc',
 	'issecretvalue',
 	'scrubsecretvalues',
+
+	-- Classic
+	'WOW_PROJECT_BURNING_CRUSADE_CLASSIC',
+	'WOW_PROJECT_CATACLYSM_CLASSIC',
+	'WOW_PROJECT_CLASSIC',
+	'WOW_PROJECT_ID',
+	'WOW_PROJECT_MAINLINE',
+	'WOW_PROJECT_MISTS_CLASSIC',
+	'WOW_PROJECT_WRATH_CLASSIC',
 }
