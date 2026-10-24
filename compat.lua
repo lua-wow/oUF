@@ -15,3 +15,35 @@ oUF.isMoP = (WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC)
 function Private.eventExists(event)
 	return C_EventUtils.IsEventValid(event)
 end
+
+local hiddenParent = CreateFrame('Frame', nil, UIParent)
+hiddenParent:SetAllPoints()
+hiddenParent:Hide()
+
+local hookedFrames = {}
+
+local function resetParent(self, parent)
+	if(parent ~= hiddenParent) then
+		self:SetParent(hiddenParent)
+	end
+end
+
+-- Classic has no SetRolesets, so blocked frames are hidden and kept in a hidden parent.
+-- doNotReparent is for frames whose parent lays them out (pools, nameplates).
+function Private.setRolesets(frame, set, doNotReparent)
+	if(frame.SetRolesets) then
+		frame:SetRolesets(set)
+	elseif(set == 'alwaysBlocked') then
+		frame:Hide()
+
+		if(not doNotReparent) then
+			frame:SetParent(hiddenParent)
+
+			if(not hookedFrames[frame]) then
+				hooksecurefunc(frame, 'SetParent', resetParent)
+
+				hookedFrames[frame] = true
+			end
+		end
+	end
+end
