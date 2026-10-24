@@ -60,6 +60,39 @@ function Private.unitSelectionColor(unit, considerHostile)
 	end
 end
 
+-- Classic has no UnitFrameUtil; same fields and defaults as Retail's GetArenaSpecValues
+-- (Blizzard_UnitFrame/Shared/UnitFrameUtil.lua), data as Classic Blizzard_ArenaUI reads it
+if(UnitFrameUtil) then
+	Private.getArenaOpponentSpecInfo = UnitFrameUtil.GetArenaOpponentSpecDisplayInfo
+else
+	function Private.getArenaOpponentSpecInfo(index)
+		local info = {
+			hasSpec = false,
+			specName = '',
+			className = '',
+			barColorR = 1,
+			barColorG = 0,
+			barColorB = 0,
+		}
+
+		local specID, gender = GetArenaOpponentSpec(index)
+		if(specID and specID > 0) then
+			local _, specName, _, _, _, class, className = GetSpecializationInfoByID(specID, gender)
+
+			info.hasSpec = true
+			info.specName = specName or ''
+			info.className = className or ''
+
+			local color = class and RAID_CLASS_COLORS[class]
+			if(color) then
+				info.barColorR, info.barColorG, info.barColorB = color.r, color.g, color.b
+			end
+		end
+
+		return info
+	end
+end
+
 -- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua: the mana bar shows while druids (WotLK,
 -- MoP) and monks (MoP) display another power; Era and TBC have no such bar
 local altPowerBarPairDisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO

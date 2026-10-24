@@ -52,7 +52,7 @@ local function updateArenaPreparationElements(self, event, elementName, specID)
 			-- if(element.colorPower and elementName == 'Power') then
 				-- FIXME: no idea if we can get power type here without the unit
 			if(element.colorClass) then
-				local info = UnitFrameUtil.GetArenaOpponentSpecDisplayInfo(self.__unitIndex)
+				local info = Private.getArenaOpponentSpecInfo(self.__unitIndex)
 				color = oUF:CreateColor(info.barColorR, info.barColorG, info.barColorB)
 			elseif(element.colorReaction) then
 				color = self.colors.reaction[2]
@@ -171,10 +171,13 @@ function oUF:HandleUnit(object, unit)
 		object:RegisterEvent('UNIT_TARGETABLE_CHANGED', object.UpdateAllElements)
 	elseif(unit:match('arena%d?$')) then
 		object:RegisterEvent('ARENA_OPPONENT_UPDATE', object.UpdateAllElements, true)
-		object:RegisterEvent('ARENA_PREP_OPPONENT_SPECIALIZATIONS', updateArenaPreparation, true)
-		object:SetAttribute('oUF-enableArenaPrep', true)
-		-- the event handler only fires for visible frames, so we have to hook it for arena prep
-		object:HookScript('OnEvent', updateArenaPreparation)
+		-- Classic: arena spec APIs are only referenced by Blizzard_ArenaUI, not documented
+		if(GetNumArenaOpponentSpecs) then
+			object:RegisterEvent('ARENA_PREP_OPPONENT_SPECIALIZATIONS', updateArenaPreparation, true)
+			object:SetAttribute('oUF-enableArenaPrep', true)
+			-- the event handler only fires for visible frames, so we have to hook it for arena prep
+			object:HookScript('OnEvent', updateArenaPreparation)
+		end
 	end
 end
 
