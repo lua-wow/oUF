@@ -47,3 +47,14 @@ function Private.setRolesets(frame, set, doNotReparent)
 		end
 	end
 end
+
+-- without SetRolesets, frames hide in pet battles through a secure parent instead
+if(UIParent.SetRolesets) then
+	Private.unitFrameParent = UIParent
+else
+	local parent = CreateFrame('Frame', nil, UIParent, 'SecureHandlerStateTemplate')
+	parent:SetAllPoints()
+	RegisterStateDriver(parent, 'visibility', '[petbattle] hide; show')
+
+	Private.unitFrameParent = parent
+end

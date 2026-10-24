@@ -755,8 +755,8 @@ do
 
 		local isPetHeader = template:match('PetHeader')
 		local name = overrideName or generateName(nil, ...)
-		local header = Mixin(CreateFrame('Frame', name, UIParent, template), headerMixin)
-		header:SetRolesets('unitFrames')
+		local header = Mixin(CreateFrame('Frame', name, Private.unitFrameParent, template), headerMixin)
+		Private.setRolesets(header, 'unitFrames')
 
 		header:SetAttribute('template', 'SecureUnitButtonTemplate, SecureHandlerStateTemplate, SecureHandlerEnterLeaveTemplate, PingableUnitFrameTemplate')
 
@@ -845,13 +845,13 @@ function oUF:Spawn(unit, overrideName)
 	unit = unit:lower()
 
 	local name = overrideName or generateName(unit)
-	local object = CreateFrame('Button', name, UIParent, 'SecureUnitButtonTemplate, PingableUnitFrameTemplate')
+	local object = CreateFrame('Button', name, Private.unitFrameParent, 'SecureUnitButtonTemplate, PingableUnitFrameTemplate')
 	Private.UpdateUnits(object, unit)
 
 	if(unit:match('arena%d?')) then
-		object:SetRolesets('arenaFrames')
+		Private.setRolesets(object, 'arenaFrames')
 	else
-		object:SetRolesets('unitFrames')
+		Private.setRolesets(object, 'unitFrames')
 	end
 
 	self:DisableBlizzard(unit)
