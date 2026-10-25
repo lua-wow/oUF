@@ -60,6 +60,9 @@ function Private.unitSelectionColor(unit, considerHostile)
 	end
 end
 
+-- Classic has no C_PetInfo.GetPetHappiness; the global's first return is the same 1-3 level
+Private.getPetHappiness = C_PetInfo.GetPetHappiness or GetPetHappiness
+
 -- Classic has no UnitFrameUtil; same fields and defaults as Retail's GetArenaSpecValues
 -- (Blizzard_UnitFrame/Shared/UnitFrameUtil.lua), data as Classic Blizzard_ArenaUI reads it
 if(UnitFrameUtil) then

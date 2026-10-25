@@ -157,7 +157,7 @@ local Private = oUF.Private
 local STATE = {}
 
 local unitSelectionColor = Private.unitSelectionColor
-local GameVersion = Private.GameVersion
+local getPetHappiness = Private.getPetHappiness
 
 local playerClass = UnitClassBase('player')
 
@@ -174,8 +174,8 @@ local function UpdateColor(self, event, unit)
 		color = self.colors.tapped
 	elseif(element.colorThreat and not UnitPlayerControlled(unit) and UnitThreatSituation('player', unit)) then
 		color = self.colors.threat[UnitThreatSituation('player', unit)]
-	elseif(element.colorHappiness and GameVersion.Forever and unit == 'pet' and playerClass == 'HUNTER' and C_PetInfo.GetPetHappiness()) then
-		color = self.colors.happiness[(C_PetInfo.GetPetHappiness())]
+	elseif(element.colorHappiness and getPetHappiness and unit == 'pet' and playerClass == 'HUNTER' and getPetHappiness()) then
+		color = self.colors.happiness[(getPetHappiness())]
 	elseif(element.colorClass and (UnitIsPlayer(unit) or UnitInPartyIsAI(unit)))
 		or (element.colorClassNPC and not (UnitIsPlayer(unit) or UnitInPartyIsAI(unit)))
 		or (element.colorClassPet and UnitPlayerControlled(unit) and not UnitIsPlayer(unit)) then
@@ -523,7 +523,7 @@ local function Enable(self, unit)
 			self:RegisterEvent('UNIT_THREAT_LIST_UPDATE', ColorPath)
 		end
 
-		if(element.colorHappiness and GameVersion.Forever and unit == 'pet' and playerClass == 'HUNTER') then
+		if(element.colorHappiness and getPetHappiness and unit == 'pet' and playerClass == 'HUNTER') then
 			self:RegisterEvent('UNIT_HAPPINESS', ColorPath)
 		end
 
