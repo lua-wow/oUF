@@ -57,6 +57,12 @@ local Private = oUF.Private
 local GameVersion = Private.GameVersion
 local GameCompatibility = Private.GameCompatibility
 
+-- Classic has no mercenary mode or honor levels
+local UnitIsMercenary = UnitIsMercenary or nop
+local UnitHonorLevel = UnitHonorLevel or nop
+local GetHonorRewardInfo = C_PvP.GetHonorRewardInfo or nop
+local hasHonorLevelUpdate = Private.eventExists('HONOR_LEVEL_UPDATE')
+
 local STATE = {}
 
 local function Update(self, event, unit)
@@ -142,7 +148,7 @@ local function Update(self, event, unit)
 		if(UnitIsPVPFreeForAll(unit)) then
 			status = 'FFA'
 		else
-			if(factionGroup ~= 'Neutral' and not scrubsecretvalues(UnitIsPVP(unit))) then
+			if(factionGroup ~= 'Neutral' and scrubsecretvalues(UnitIsPVP(unit))) then
 				status = factionGroup
 			end
 		end
@@ -153,7 +159,7 @@ local function Update(self, event, unit)
 			local honorRewardInfo
 			local honorLevel = UnitHonorLevel(unit)
 			if(not issecretvalue(honorLevel)) then
-				honorRewardInfo = C_PvP.GetHonorRewardInfo(honorLevel)
+				honorRewardInfo = GetHonorRewardInfo(honorLevel)
 			end
 
 			if(element.Badge and honorRewardInfo) then
@@ -242,7 +248,9 @@ local function Enable(self, unit)
 		end
 
 		self:RegisterEvent('UNIT_FACTION', Path)
-		self:RegisterEvent('HONOR_LEVEL_UPDATE', Path, true)
+		if(hasHonorLevelUpdate) then
+			self:RegisterEvent('HONOR_LEVEL_UPDATE', Path, true)
+		end
 		self:RegisterEvent('PLAYER_REGEN_ENABLED', Path, true)
 
 		if(GameVersion.Forever and unit == 'player') then
