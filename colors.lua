@@ -85,6 +85,7 @@ local colors = {
 		oUF:CreateColor(247, 65, 57), -- blood
 		oUF:CreateColor(148, 203, 247), -- frost
 		oUF:CreateColor(173, 235, 66), -- unholy
+		oUF:CreateColor(230, 25, 255), -- death (rune types)
 	},
 	selection = {
 		-- https://warcraft.wiki.gg/wiki/API_UnitSelectionColor

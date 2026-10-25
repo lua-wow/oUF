@@ -18,6 +18,9 @@ A default texture will be applied if the sub-widgets are StatusBars and don't ha
 .sortOrder - Sorting order. Sorts by the remaining cooldown time, 'asc' - from the least cooldown time remaining (fully
              charged) to the most (fully depleted), 'desc' - the opposite (string?)['asc', 'desc']
 
+With rune types (`GetRuneType`, WotLK and MoP) the runes keep Blizzard's order, each rune is colored by its type
+(`self.colors.runes`: 1 blood, 2 frost, 3 unholy, 4 death) and `.colorSpec` and `.sortOrder` are ignored.
+
 ## Examples
 
     local Runes = {}
@@ -40,7 +43,11 @@ local Private = oUF.Private
 
 local unitIsUnit = Private.unitIsUnit
 
-local runemap = {1, 2, 3, 4, 5, 6}
+-- undocumented, WotLK and MoP; Blizzard's rune frame uses it
+local GetRuneType = GetRuneType
+
+-- Blizzard's display order with rune types; it swaps 3/5 and 4/6, so it maps both ways
+local runemap = GetRuneType and {1, 2, 5, 6, 3, 4} or {1, 2, 3, 4, 5, 6}
 local hasSortOrder = false
 
 local function onUpdate(self, elapsed)
@@ -73,8 +80,39 @@ local function descSort(runeAID, runeBID)
 	end
 end
 
-local function UpdateColor(self, event)
+local function UpdateRuneType(self, element, runeID)
+	local rune = element[runemap[runeID]]
+	if(not rune) then return end
+
+	local color = self.colors.runes[GetRuneType(runeID)] or self.colors.power.RUNES
+	rune:SetStatusBarColor(color:GetRGB())
+
+	--[[ Callback: Runes:PostUpdateColor(color, rune)
+	Called after a rune's color has been updated (rune types only).
+
+	* self  - the Runes element
+	* color - the used ColorMixin-based object (table)
+	* rune  - the updated rune (StatusBar)
+	--]]
+	if(element.PostUpdateColor) then
+		element:PostUpdateColor(color, rune)
+	end
+end
+
+local function UpdateColor(self, event, runeID)
 	local element = self.Runes
+
+	if(GetRuneType) then
+		if(event == 'RUNE_TYPE_UPDATE') then
+			UpdateRuneType(self, element, runeID)
+		else
+			for id = 1, #runemap do
+				UpdateRuneType(self, element, id)
+			end
+		end
+
+		return
+	end
 
 	local spec = C_SpecializationInfo.GetSpecialization() or 0
 
@@ -116,15 +154,18 @@ end
 local function Update(self, event)
 	local element = self.Runes
 
-	if(element.sortOrder == 'asc') then
-		table.sort(runemap, ascSort)
-		hasSortOrder = true
-	elseif(element.sortOrder == 'desc') then
-		table.sort(runemap, descSort)
-		hasSortOrder = true
-	elseif(hasSortOrder) then
-		table.sort(runemap)
-		hasSortOrder = false
+	-- rune types keep Blizzard's order; sorting would separate a rune from its type color
+	if(not GetRuneType) then
+		if(element.sortOrder == 'asc') then
+			table.sort(runemap, ascSort)
+			hasSortOrder = true
+		elseif(element.sortOrder == 'desc') then
+			table.sort(runemap, descSort)
+			hasSortOrder = true
+		elseif(hasSortOrder) then
+			table.sort(runemap)
+			hasSortOrder = false
+		end
 	end
 
 	local currentTime = GetTime()
@@ -191,7 +232,11 @@ local function Disable(self)
 			element[i]:Hide()
 		end
 
-		self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
+		if(GetRuneType) then
+			self:UnregisterEvent('RUNE_TYPE_UPDATE', ColorPath)
+		else
+			self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
+		end
 		self:UnregisterEvent('RUNE_POWER_UPDATE', Path)
 	end
 end
@@ -215,7 +260,11 @@ local function Enable(self, unit)
 			end
 		end
 
-		self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
+		if(GetRuneType) then
+			self:RegisterEvent('RUNE_TYPE_UPDATE', ColorPath, true)
+		else
+			self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', ColorPath)
+		end
 		self:RegisterEvent('RUNE_POWER_UPDATE', Path, true)
 
 		return true
