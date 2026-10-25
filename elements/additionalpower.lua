@@ -63,7 +63,7 @@ local playerClass = UnitClassBase('player')
 local ALT_POWER_BAR_PAIR_DISPLAY_INFO = Private.altPowerBarPairDisplayInfo
 
 -- Classic: Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua shows the MoP monk mana bar only as Mistweaver
-local SPEC_RESTRICTION = Private.GameVersion.Mists and playerClass == 'MONK' and (_G.SPEC_MONK_MISTWEAVER or 2)
+local SPEC_RESTRICTION = Private.GameVersion.Mists and playerClass == 'MONK' and SPEC_MONK_MISTWEAVER
 
 local ADDITIONAL_POWER_BAR_NAME = 'MANA'
 local ADDITIONAL_POWER_BAR_INDEX = 0

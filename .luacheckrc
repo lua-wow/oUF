@@ -196,7 +196,10 @@ read_globals = {
 	'scrubsecretvalues',
 
 	-- Classic
+	'GetComboPoints',
 	'RAID_CLASS_COLORS',
+	'SPEC_MONK_MISTWEAVER',
+	'UnitIgnoresVehicleComboPoints',
 	'WOW_PROJECT_BURNING_CRUSADE_CLASSIC',
 	'WOW_PROJECT_CATACLYSM_CLASSIC',
 	'WOW_PROJECT_CLASSIC',
@@ -204,4 +207,5 @@ read_globals = {
 	'WOW_PROJECT_MAINLINE',
 	'WOW_PROJECT_MISTS_CLASSIC',
 	'WOW_PROJECT_WRATH_CLASSIC',
+	'nop',
 }
