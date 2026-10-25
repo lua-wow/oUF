@@ -93,6 +93,7 @@ read_globals = {
 	'GetRaidTargetIndex',
 	'GetReadyCheckStatus',
 	'GetRuneCooldown',
+	'GetRuneType',
 	'GetSpecializationInfoByID',
 	'GetSpellPowerCost',
 	'GetTexCoordsForRoleSmallCircle',
