@@ -26,7 +26,20 @@ local _, ns = ...
 local oUF = ns.oUF
 local Private = oUF.Private
 
-local GameVersion = Private.GameVersion
+local getPetHappiness = Private.getPetHappiness
+
+-- only Forever has the atlases; elsewhere use the texture of Blizzard's Classic PetFrame
+local hasAtlas = C_Texture.GetAtlasInfo('UI-PetHappiness')
+
+local function SetHappiness(element, atlas, left, right)
+	if(hasAtlas) then
+		element:SetAtlas(atlas)
+	else
+		element:SetTexture([[Interface\PetPaperDollFrame\UI-PetHappiness]])
+		element:SetTexCoord(left, right, 0, 0.359375)
+	end
+	element:Show()
+end
 
 local function Update(self, event, unit)
 	if(self.__unit ~= unit) then return end
@@ -42,16 +55,13 @@ local function Update(self, event, unit)
 		element:PreUpdate()
 	end
 
-	local happiness = C_PetInfo.GetPetHappiness()
+	local happiness = getPetHappiness()
 	if(happiness == 1) then
-		element:SetAtlas('UI-PetMad')
-		element:Show()
+		SetHappiness(element, 'UI-PetMad', 0.375, 0.5625)
 	elseif(happiness == 2) then
-		element:SetAtlas('UI-PetNeutral')
-		element:Show()
+		SetHappiness(element, 'UI-PetNeutral', 0.1875, 0.375)
 	elseif(happiness == 3) then
-		element:SetAtlas('UI-PetHappiness')
-		element:Show()
+		SetHappiness(element, 'UI-PetHappiness', 0, 0.1875)
 	else
 		element:Hide()
 	end
@@ -92,7 +102,7 @@ local function Disable(self)
 end
 
 local function Enable(self, unit)
-	if(not GameVersion.Forever or UnitClassBase('player') ~= 'HUNTER' or unit ~= 'pet') then
+	if(not getPetHappiness or UnitClassBase('player') ~= 'HUNTER' or unit ~= 'pet') then
 		Disable(self)
 		return false
 	end

@@ -129,6 +129,7 @@ local _ENV = {
 	GameVersion = Private.GameVersion,
 	GameCompatibility = Private.GameCompatibility,
 	GetArenaOpponentSpecInfo = Private.getArenaOpponentSpecInfo,
+	GetPetHappiness = Private.getPetHappiness,
 }
 
 local _PROXY = setmetatable(_ENV, {__index = _G})
@@ -225,8 +226,8 @@ local tagStrings = {
 	end]],
 
 	['happiness'] = [[function(u)
-		if(GameVersion.Forever and u == 'pet') then
-			local happiness = C_PetInfo.GetPetHappiness()
+		if(GetPetHappiness and u == 'pet') then
+			local happiness = GetPetHappiness()
 			if(happiness == 1) then
 				return ':<'
 			elseif(happiness == 2) then

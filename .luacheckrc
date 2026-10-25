@@ -89,6 +89,7 @@ read_globals = {
 	'GetCollapsingStarCost',
 	'GetNetStats',
 	'GetNumArenaOpponentSpecs',
+	'GetPetHappiness',
 	'GetPartyAssignment',
 	'GetRaidTargetIndex',
 	'GetReadyCheckStatus',
