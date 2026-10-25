@@ -128,6 +128,7 @@ local _ENV = {
 	ColorMixin = ColorMixin, -- not available in restricted env for some reason
 	GameVersion = Private.GameVersion,
 	GameCompatibility = Private.GameCompatibility,
+	GetArenaOpponentSpecInfo = Private.getArenaOpponentSpecInfo,
 }
 
 local _PROXY = setmetatable(_ENV, {__index = _G})
@@ -152,7 +153,7 @@ local tagStrings = {
 	['arenaspec'] = [[function(u)
 		local id = u:match('arena(%d)$')
 		if(id) then
-			return UnitFrameUtil.GetArenaOpponentSpecDisplayInfo(tonumber(id)).specName
+			return GetArenaOpponentSpecInfo(tonumber(id)).specName
 		end
 	end]],
 
@@ -350,7 +351,7 @@ local tagStrings = {
 		else
 			local id = u:match('arena(%d)$')
 			if(id) then
-				local info = UnitFrameUtil.GetArenaOpponentSpecDisplayInfo(tonumber(id))
+				local info = GetArenaOpponentSpecInfo(tonumber(id))
 				return Hex(info.barColorR, info.barColorG, info.barColorB)
 			end
 		end
