@@ -27,12 +27,10 @@ local oUF = ns.oUF
 local Private = oUF.Private
 
 local unitIsUnit = Private.unitIsUnit
-local GameVersion = Private.GameVersion
 
-local function Update(self, event, unit)
-	if(self.__unit ~= unit) then return end
-
+local function Update(self, event)
 	local element = self.MasterLooterIndicator
+	local unit = self.__unit
 
 	--[[ Callback: MasterLooterIndicator:PreUpdate()
 	Called before the element has been updated.
@@ -100,7 +98,7 @@ local function Disable(self)
 end
 
 local function Enable(self, unit)
-	if(not GameVersion.Forever) then
+	if(not C_PartyInfo.GetLootMethod) then
 		Disable(self)
 		return false
 	end
