@@ -96,21 +96,19 @@ else
 	end
 end
 
--- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua: the mana bar shows while druids (WotLK,
--- MoP) and monks (MoP) display another power; Era and TBC have no such bar
+-- follows Blizzard_UnitFrame/Wrath/AlternatePowerBar.lua: the mana bar shows while druids and monks
+-- (MoP) display another power; Blizzard has no such bar on Era and TBC, oUF adds it there too
 local altPowerBarPairDisplayInfo = _G.ALT_POWER_BAR_PAIR_DISPLAY_INFO
 if(not altPowerBarPairDisplayInfo) then
 	local GameVersion = Private.GameVersion
 	local mana = { powerType = Enum.PowerType.Mana, powerName = 'MANA' }
 
-	altPowerBarPairDisplayInfo = {}
-
-	if(GameVersion.Wrath or GameVersion.Mists) then
-		altPowerBarPairDisplayInfo.DRUID = {
+	altPowerBarPairDisplayInfo = {
+		DRUID = {
 			[Enum.PowerType.Rage] = mana,
 			[Enum.PowerType.Energy] = mana,
-		}
-	end
+		},
+	}
 
 	if(GameVersion.Mists) then
 		altPowerBarPairDisplayInfo.MONK = {
