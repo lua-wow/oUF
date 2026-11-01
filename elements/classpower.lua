@@ -21,6 +21,7 @@ Supported class powers:
   - Mage         - Icicles
   - Monk         - Chi Orbs
   - Paladin      - Holy Power
+  - Priest       - Shadow Orbs (Mists)
   - Shaman       - Maelstrom Weapon
   - Warlock      - Soul Shards
 
@@ -69,6 +70,7 @@ local GetTargetComboPoints = not GameCompatibility.Warlords and GetComboPoints
 local SPEC_DEMONHUNTER_DEVOURER = _G.SPEC_DEMONHUNTER_DEVOURER or 3
 local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
 local SPEC_MONK_WINDWALKER = _G.SPEC_MONK_WINDWALKER or 3
+local SPEC_PRIEST_SHADOW = _G.SPEC_PRIEST_SHADOW or 3
 local SPEC_WARLOCK_DESTRUCTION = _G.SPEC_WARLOCK_DESTRUCTION or 3
 local SPEC_MAGE_FROST = 3
 
@@ -79,10 +81,12 @@ local POWER_TYPE_ESSENCE = 'ESSENCE'
 local POWER_TYPE_HOLY_POWER = 'HOLY_POWER'
 local POWER_TYPE_ICICLES = 'ICICLES' -- fake
 local POWER_TYPE_MAELSTROM = 'MAELSTROM'
+local POWER_TYPE_SHADOW_ORBS = 'SHADOW_ORBS'
 local POWER_TYPE_SOUL_FRAGMENTS = 'SOUL_FRAGMENTS' -- fake, but it's present in PowerBarColor
 local POWER_TYPE_SOUL_SHARDS = 'SOUL_SHARDS'
 local POWER_TYPE_TIP_OF_THE_SPEAR = 'TIP_OF_THE_SPEAR' -- fake
 
+local SPELL_ARCANE_CHARGE = 36032
 local SPELL_DARK_HEART = Constants.UnitPowerSpellIDs.DARK_HEART_SPELL_ID or 1225789
 local SPELL_ICICLES = 205473
 local SPELL_ICICLES_TALENT = 1246832
@@ -212,6 +216,30 @@ elseif(playerClass == 'HUNTER' and GameCompatibility.BattleForAzeroth) then
 			return POWER_TYPE_TIP_OF_THE_SPEAR
 		end
 	end
+elseif(playerClass == 'MAGE' and GameCompatibility.Mists and not GameCompatibility.Warlords) then
+	-- on Mists the charges are debuff stacks, UnitPower(ArcaneCharges) is a constant
+	local function GetArcaneCharges()
+		local auraInfo = C_UnitAuras.GetPlayerAuraBySpellID(SPELL_ARCANE_CHARGE)
+		if(auraInfo) then
+			return auraInfo.applications
+		end
+
+		return 0
+	end
+
+	local function GetArcaneChargesMax()
+		return C_Spell.GetSpellMaxCumulativeAuraApplications(SPELL_ARCANE_CHARGE)
+	end
+
+	GetPowerUpdaters = function()
+		return GetArcaneCharges, GetArcaneChargesMax, GetGenericPowerColor
+	end
+
+	GetAuraInfo = function()
+		if(C_SpecializationInfo.GetSpecialization() == SPEC_MAGE_ARCANE) then
+			return POWER_TYPE_ARCANE_CHARGES
+		end
+	end
 elseif(playerClass == 'MAGE' and GameCompatibility.Midnight) then
 	local function GetIcicles(unit)
 		local auraInfo = C_UnitAuras.GetPlayerAuraBySpellID(SPELL_ICICLES)
@@ -271,6 +299,16 @@ elseif(playerClass == 'PALADIN' and GameCompatibility.Cataclysm) then
 
 	GetPowerInfo = function() -- might as well be static
 		return POWER_TYPE_HOLY_POWER, Enum.PowerType.HolyPower
+	end
+elseif(playerClass == 'PRIEST' and GameCompatibility.Mists and not GameCompatibility.Legion) then
+	GetPowerUpdaters = function()
+		return GetGenericPower, GetGenericPowerMax, GetGenericPowerColor
+	end
+
+	GetPowerInfo = function()
+		if(C_SpecializationInfo.GetSpecialization() == SPEC_PRIEST_SHADOW) then
+			return POWER_TYPE_SHADOW_ORBS, Enum.PowerType.ShadowOrbs
+		end
 	end
 elseif(playerClass == 'ROGUE') then
 	GetPowerUpdaters = function()
@@ -539,7 +577,8 @@ do
 			self:RegisterEvent('UNIT_AURA', Path)
 		else
 			self:RegisterEvent('UNIT_MAXPOWER', Path)
-			self:RegisterEvent('UNIT_POWER_UPDATE', Path)
+			-- before Warlords some class powers (Shadow Orbs) only fire UNIT_POWER_FREQUENT
+			self:RegisterEvent(GameCompatibility.Warlords and 'UNIT_POWER_UPDATE' or 'UNIT_POWER_FREQUENT', Path)
 
 			-- according to Blizz any class may receive this event due to specific spell auras
 			if(hasPowerPointCharge) then
@@ -567,6 +606,7 @@ do
 	function ClassPowerDisable(self, unregisterOnly)
 		self:UnregisterEvent('UNIT_AURA', Path)
 		self:UnregisterEvent('UNIT_POWER_UPDATE', Path)
+		self:UnregisterEvent('UNIT_POWER_FREQUENT', Path)
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
 		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
 		self:UnregisterEvent('SPELLS_CHANGED', ColorPath)
@@ -597,6 +637,8 @@ local function Enable(self, unit)
 		self:RegisterEvent('PLAYER_LEVEL_UP', VisibilityPath, true)
 		if(C_ClassTalents) then
 			self:RegisterEvent('TRAIT_CONFIG_UPDATED', VisibilityPath, true)
+		elseif(GameCompatibility.Mists) then
+			self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
 		end
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 
@@ -624,6 +666,7 @@ local function Disable(self)
 
 		self:UnregisterEvent('PLAYER_LEVEL_UP', VisibilityPath)
 		self:UnregisterEvent('TRAIT_CONFIG_UPDATED', VisibilityPath)
+		self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
 		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 	end
 end
