@@ -1,9 +1,9 @@
-## Interface: 11509, 20506, 38002, 50504
+## Interface: 11509, 20506, 38002, 40402, 50504
 ## Title: oUF
 ## Author: Haste, lightspark, p3lim, Rainrider
 ## Version: @project-version@
 ## Notes: Unit frame framework. Does nothing by itself.
-## AllowLoadGameType: vanilla, tbc, wrath, mists
+## AllowLoadGameType: vanilla, tbc, wrath, cata, mists
 ## OptionalDeps: Clique
 ## X-oUF: oUF
 
