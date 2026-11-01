@@ -24,6 +24,8 @@ Supported class powers:
   - Priest       - Shadow Orbs (Mists)
   - Shaman       - Maelstrom Weapon
   - Warlock      - Soul Shards
+  - Warlock      - Burning Embers (Mists)
+  - Warlock      - Demonic Fury (Mists)
 
 ## Examples
 
@@ -71,11 +73,15 @@ local SPEC_DEMONHUNTER_DEVOURER = _G.SPEC_DEMONHUNTER_DEVOURER or 3
 local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
 local SPEC_MONK_WINDWALKER = _G.SPEC_MONK_WINDWALKER or 3
 local SPEC_PRIEST_SHADOW = _G.SPEC_PRIEST_SHADOW or 3
+local SPEC_WARLOCK_AFFLICTION = _G.SPEC_WARLOCK_AFFLICTION or 1
+local SPEC_WARLOCK_DEMONOLOGY = _G.SPEC_WARLOCK_DEMONOLOGY or 2
 local SPEC_WARLOCK_DESTRUCTION = _G.SPEC_WARLOCK_DESTRUCTION or 3
 local SPEC_MAGE_FROST = 3
 
 local POWER_TYPE_ARCANE_CHARGES = 'ARCANE_CHARGES'
+local POWER_TYPE_BURNING_EMBERS = 'BURNING_EMBERS'
 local POWER_TYPE_CHI = 'CHI'
+local POWER_TYPE_DEMONIC_FURY = 'DEMONIC_FURY'
 local POWER_TYPE_COMBO_POINTS = 'COMBO_POINTS'
 local POWER_TYPE_ESSENCE = 'ESSENCE'
 local POWER_TYPE_HOLY_POWER = 'HOLY_POWER'
@@ -87,6 +93,8 @@ local POWER_TYPE_SOUL_SHARDS = 'SOUL_SHARDS'
 local POWER_TYPE_TIP_OF_THE_SPEAR = 'TIP_OF_THE_SPEAR' -- fake
 
 local SPELL_ARCANE_CHARGE = 36032
+local SPELL_BURNING_EMBERS = _G.WARLOCK_BURNING_EMBERS or 108647
+local MAX_POWER_PER_EMBER = _G.MAX_POWER_PER_EMBER or 10
 local SPELL_DARK_HEART = Constants.UnitPowerSpellIDs.DARK_HEART_SPELL_ID or 1225789
 local SPELL_ICICLES = 205473
 local SPELL_ICICLES_TALENT = 1246832
@@ -346,15 +354,62 @@ elseif(playerClass == 'WARLOCK' and GameCompatibility.Cataclysm) then
 		return UnitPower(unit, Enum.PowerType.SoulShards, true) / UnitPowerDisplayMod(Enum.PowerType.SoulShards)
 	end
 
+	-- UnitPower(unit, BurningEmbers, true) counts MAX_POWER_PER_EMBER (10) per ember
+	local function GetBurningEmbers(unit)
+		return UnitPower(unit, Enum.PowerType.BurningEmbers, true) / MAX_POWER_PER_EMBER
+	end
+
+	local function GetBurningEmbersMax(unit)
+		return math.floor(UnitPowerMax(unit, Enum.PowerType.BurningEmbers, true) / MAX_POWER_PER_EMBER)
+	end
+
+	-- one segment filled by fury / max, as Blizzard's continuous DemonicFuryBar
+	local function GetDemonicFury(unit)
+		local max = UnitPowerMax(unit, Enum.PowerType.DemonicFury)
+		if(max == 0) then
+			return 0
+		end
+
+		return UnitPower(unit, Enum.PowerType.DemonicFury) / max
+	end
+
+	local function GetDemonicFuryMax()
+		return 1
+	end
+
 	GetPowerUpdaters = function()
-		if(C_SpecializationInfo.GetSpecialization() == SPEC_WARLOCK_DESTRUCTION) then
-			return GetSoulShardsDestruction, GetGenericPowerMax, GetGenericPowerColor
+		if(GameCompatibility.Mists and not GameCompatibility.Warlords and C_SpecializationInfo.GetSpecialization() == SPEC_WARLOCK_DEMONOLOGY) then
+			return GetDemonicFury, GetDemonicFuryMax, GetGenericPowerColor
+		end
+
+		if(GameCompatibility.Mists and C_SpecializationInfo.GetSpecialization() == SPEC_WARLOCK_DESTRUCTION) then
+			if(not GameCompatibility.Warlords) then
+				return GetBurningEmbers, GetBurningEmbersMax, GetGenericPowerColor
+			elseif(GameCompatibility.Legion) then -- fractional destruction shards are Legion+
+				return GetSoulShardsDestruction, GetGenericPowerMax, GetGenericPowerColor
+			end
 		end
 
 		return GetGenericPower, GetGenericPowerMax, GetGenericPowerColor
 	end
 
-	GetPowerInfo = function() -- might as well be static
+	GetPowerInfo = function()
+		-- MoP: shards for affliction, fury for demonology, embers for destruction (once known), as Blizzard's Mists/ShardBar.lua; Cata: shards for every spec
+		if(GameCompatibility.Mists and not GameCompatibility.Warlords) then
+			local specialization = C_SpecializationInfo.GetSpecialization()
+			if(specialization == SPEC_WARLOCK_DEMONOLOGY) then
+				return POWER_TYPE_DEMONIC_FURY, Enum.PowerType.DemonicFury
+			elseif(specialization == SPEC_WARLOCK_DESTRUCTION) then
+				if(C_SpellBook.IsSpellKnown(SPELL_BURNING_EMBERS)) then
+					return POWER_TYPE_BURNING_EMBERS, Enum.PowerType.BurningEmbers
+				end
+
+				return
+			elseif(specialization ~= SPEC_WARLOCK_AFFLICTION) then
+				return
+			end
+		end
+
 		return POWER_TYPE_SOUL_SHARDS, Enum.PowerType.SoulShards
 	end
 end
@@ -640,6 +695,10 @@ local function Enable(self, unit)
 		elseif(GameCompatibility.Mists) then
 			self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
 		end
+		-- MoP burning embers need a spell learned after the spec, as Blizzard's Mists/ShardBar.lua
+		if(playerClass == 'WARLOCK' and GameCompatibility.Mists and not GameCompatibility.Warlords) then
+			self:RegisterEvent('SPELLS_CHANGED', VisibilityPath, true)
+		end
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 
 		element.ClassPowerEnable = ClassPowerEnable
@@ -667,6 +726,7 @@ local function Disable(self)
 		self:UnregisterEvent('PLAYER_LEVEL_UP', VisibilityPath)
 		self:UnregisterEvent('TRAIT_CONFIG_UPDATED', VisibilityPath)
 		self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		self:UnregisterEvent('SPELLS_CHANGED', VisibilityPath)
 		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 	end
 end

@@ -225,6 +225,12 @@ colors.power[Enum.PowerType.ArcaneCharges or 16] = colors.power.ARCANE_CHARGES
 colors.power.SHADOW_ORBS = colors.power.INSANITY
 colors.power[Enum.PowerType.ShadowOrbs or 28] = colors.power.SHADOW_ORBS
 
+-- Mists burning embers and demonic fury have no PowerBarColor entry
+colors.power.BURNING_EMBERS = oUF:CreateColor(0.95, 0.50, 0.10)
+colors.power[Enum.PowerType.BurningEmbers or 14] = colors.power.BURNING_EMBERS
+colors.power.DEMONIC_FURY = oUF:CreateColor(0.58, 0.35, 0.79)
+colors.power[Enum.PowerType.DemonicFury or 15] = colors.power.DEMONIC_FURY
+
 -- Mists eclipse bar has no PowerBarColor entry, keyed by Blizzard's direction strings
 colors.power.ECLIPSE = {
 	moon = oUF:CreateColor(0.30, 0.52, 0.90),
