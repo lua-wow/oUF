@@ -1,7 +1,7 @@
 --[[
 # Element: Eclipse Bar
 
-Handles the visibility and updating of the Mists Balance Druid's eclipse bar.
+Handles the visibility and updating of the Cata and Mists Balance Druid's eclipse bar.
 
 ## Widget
 
@@ -42,7 +42,6 @@ local oUF = ns.oUF
 local Private = oUF.Private
 
 local GameCompatibility = Private.GameCompatibility
-if(UnitClassBase('player') ~= 'DRUID' or not GameCompatibility.Mists or GameCompatibility.Warlords) then return end
 
 local STATE = {}
 
@@ -206,7 +205,32 @@ local function ForceUpdate(element)
 	end
 end
 
+local function Disable(self)
+	local element = self.EclipseBar
+	if(element) then
+		element:Hide()
+
+		if(GameCompatibility.Mists) then
+			self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		else
+			self:UnregisterEvent('PLAYER_TALENT_UPDATE', VisibilityPath)
+		end
+		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
+		self:UnregisterEvent('UPDATE_SHAPESHIFT_FORM', VisibilityPath)
+		self:UnregisterEvent('UNIT_POWER_FREQUENT', Path)
+		self:UnregisterEvent('UNIT_MAXPOWER', Path)
+		self:UnregisterEvent('UNIT_AURA', UpdateEclipse)
+		self:UnregisterEvent('ECLIPSE_DIRECTION_CHANGE', UpdateDirection)
+	end
+end
+
 local function Enable(self, unit)
+	if(UnitClassBase('player') ~= 'DRUID' or not GameCompatibility.Cataclysm or GameCompatibility.Warlords) then
+		Disable(self)
+
+		return false
+	end
+
 	local element = self.EclipseBar
 	if(element and unitIsUnit(unit, 'player')) then
 		element.__owner = self
@@ -214,7 +238,11 @@ local function Enable(self, unit)
 
 		STATE[element] = {}
 
-		self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		if(GameCompatibility.Mists) then
+			self:RegisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
+		else
+			self:RegisterEvent('PLAYER_TALENT_UPDATE', VisibilityPath, true)
+		end
 		self:RegisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
 		self:RegisterEvent('UPDATE_SHAPESHIFT_FORM', VisibilityPath, true)
 
@@ -228,21 +256,6 @@ local function Enable(self, unit)
 		element:Hide()
 
 		return true
-	end
-end
-
-local function Disable(self)
-	local element = self.EclipseBar
-	if(element) then
-		element:Hide()
-
-		self:UnregisterEvent('PLAYER_SPECIALIZATION_CHANGED', VisibilityPath)
-		self:UnregisterEvent('UNIT_DISPLAYPOWER', VisibilityPath)
-		self:UnregisterEvent('UPDATE_SHAPESHIFT_FORM', VisibilityPath)
-		self:UnregisterEvent('UNIT_POWER_FREQUENT', Path)
-		self:UnregisterEvent('UNIT_MAXPOWER', Path)
-		self:UnregisterEvent('UNIT_AURA', UpdateEclipse)
-		self:UnregisterEvent('ECLIPSE_DIRECTION_CHANGE', UpdateDirection)
 	end
 end
 
