@@ -221,6 +221,10 @@ colors.power[Enum.PowerType.Pain or 18] = colors.power.PAIN
 colors.power[Enum.PowerType.Chi or 12] = colors.power.CHI
 colors.power[Enum.PowerType.ArcaneCharges or 16] = colors.power.ARCANE_CHARGES
 
+-- Mists shadow orbs have no PowerBarColor entry, use insanity's
+colors.power.SHADOW_ORBS = colors.power.INSANITY
+colors.power[Enum.PowerType.ShadowOrbs or 28] = colors.power.SHADOW_ORBS
+
 -- there's no official colour for evoker's essence
 -- use the average colour of the essence texture instead
 colors.power.ESSENCE = oUF:CreateColor(100, 173, 206)
