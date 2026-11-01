@@ -225,6 +225,12 @@ colors.power[Enum.PowerType.ArcaneCharges or 16] = colors.power.ARCANE_CHARGES
 colors.power.SHADOW_ORBS = colors.power.INSANITY
 colors.power[Enum.PowerType.ShadowOrbs or 28] = colors.power.SHADOW_ORBS
 
+-- Mists eclipse bar has no PowerBarColor entry, keyed by Blizzard's direction strings
+colors.power.ECLIPSE = {
+	moon = oUF:CreateColor(0.30, 0.52, 0.90),
+	sun = oUF:CreateColor(0.80, 0.82, 0.60),
+}
+
 -- there's no official colour for evoker's essence
 -- use the average colour of the essence texture instead
 colors.power.ESSENCE = oUF:CreateColor(100, 173, 206)

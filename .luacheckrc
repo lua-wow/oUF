@@ -198,6 +198,8 @@ read_globals = {
 
 	-- Classic
 	'GetComboPoints',
+	'GetEclipseDirection',
+	'GetShapeshiftFormID',
 	'RAID_CLASS_COLORS',
 	'SPEC_MONK_MISTWEAVER',
 	'UnitIgnoresVehicleComboPoints',
