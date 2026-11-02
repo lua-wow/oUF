@@ -14,7 +14,7 @@ By itself oUF doesn't do much, a layout is required.
 
 ## Classic branch
 
-This branch is `master` plus compatibility for Classic Era, TBC, WotLK and MoP (`compat.lua`).  
+This branch is `master` plus compatibility for Classic Era, TBC, WotLK, Cata and MoP (`compat.lua`).  
 Retail-only elements are kept; they stay inert unless a layout creates their widget.
 
 ## Documentation
