@@ -49,6 +49,10 @@ local STATE = {}
 
 local unitIsUnit = Private.unitIsUnit
 local GameCompatibility = Private.GameCompatibility
+local GameVersion = Private.GameVersion
+
+-- in Forever combo points belong to the target, UnitPower returns the points of the last combo target
+local GetTargetComboPoints = GameVersion.Forever and GetComboPoints
 
 local playerClass = UnitClassBase('player')
 
@@ -101,6 +105,10 @@ local function GetGenericPowerColor(element, powerType)
 end
 
 local function GetComboPoints(unit)
+	if(GetTargetComboPoints) then
+		return GetTargetComboPoints(unit, 'target')
+	end
+
 	return UnitPower(unit, Enum.PowerType.ComboPoints), GetUnitChargedPowerPoints(unit)
 end
 
@@ -427,6 +435,10 @@ local function Path(self, ...)
 	return (self.ClassPower.Override or Update) (self, ...)
 end
 
+local function TargetComboPointsPath(self, event)
+	return Path(self, event, UnitHasVehicleUI('player') and 'vehicle' or 'player', POWER_TYPE_COMBO_POINTS)
+end
+
 local function Visibility(self, event, unit)
 	local element = self.ClassPower
 	local powerType, powerID, isAuraPower
@@ -525,6 +537,11 @@ do
 		self:RegisterEvent('SPELLS_CHANGED', ColorPath, true)
 
 		local element = self.ClassPower
+		if(GetTargetComboPoints and STATE[element].powerType == POWER_TYPE_COMBO_POINTS) then
+			self:RegisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath, true)
+			self:RegisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath, true)
+		end
+
 		STATE[element].enabled = true
 
 		if(UnitHasVehicleUI('player')) then
@@ -540,6 +557,8 @@ do
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
 		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
 		self:UnregisterEvent('SPELLS_CHANGED', ColorPath)
+		self:UnregisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath)
+		self:UnregisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath)
 
 		if(not unregisterOnly) then
 			local element = self.ClassPower
