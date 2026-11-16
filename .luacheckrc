@@ -17,7 +17,7 @@ ignore = {
 
 read_globals = {
 	string = {fields = {'join', 'split', 'trim'}},
-	table = {fields = {'count', 'removemulti', 'wipe'}},
+	table = {fields = {'contains', 'count', 'removemulti', 'wipe'}},
 
 	-- FrameXML
 	'AnchorUtil',
@@ -62,6 +62,7 @@ read_globals = {
 	'C_ClassColor',
 	'C_ClassTalents',
 	'C_ColorUtil',
+	'C_CombatLog',
 	'C_CurveUtil',
 	'C_DurationUtil',
 	'C_EventUtils',
@@ -76,6 +77,7 @@ read_globals = {
 	'C_Spell',
 	'C_SpellBook',
 	'C_StringUtil',
+	'C_SwingTimer',
 	'C_Texture',
 	'C_Timer',
 	'C_UnitAuras',
@@ -87,6 +89,7 @@ read_globals = {
 	'GetArenaOpponentSpec',
 	'GetBuildInfo',
 	'GetCollapsingStarCost',
+	'GetComboPoints',
 	'GetNetStats',
 	'GetNumArenaOpponentSpecs',
 	'GetPetHappiness',
@@ -129,6 +132,7 @@ read_globals = {
 	'SetPortraitTexture',
 	'SetRaidTargetIconTexture',
 	'UnitAffectingCombat',
+	'UnitAttackSpeed',
 	'UnitAuraSlots',
 	'UnitCanCooperate',
 	'UnitCastingDuration',
@@ -175,6 +179,7 @@ read_globals = {
 	'UnitNameplateShowsWidgetsOnly',
 	'UnitPhaseReason',
 	'UnitPlayerControlled',
+	'UnitPlayerOrPetInParty',
 	'UnitPower',
 	'UnitPowerBarID',
 	'UnitPowerDisplayMod',
@@ -183,6 +188,7 @@ read_globals = {
 	'UnitPowerType',
 	'UnitPvpClassification',
 	'UnitRace',
+	'UnitRangedDamage',
 	'UnitReaction',
 	'UnitSelectionColor',
 	'UnitSelectionType',

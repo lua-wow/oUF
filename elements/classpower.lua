@@ -64,10 +64,6 @@ local PlayerVehicleHasComboPoints = PlayerVehicleHasComboPoints or function()
 end
 local hasPowerPointCharge = Private.eventExists('UNIT_POWER_POINT_CHARGE')
 
--- before Warlords combo points belong to the target, as in Blizzard's Classic/ComboFrame.lua;
--- on MoP UnitPower keeps the previous target's points
-local GetTargetComboPoints = not GameCompatibility.Warlords and GetComboPoints
-
 -- sourced from Blizzard_FrameXMLBase/Constants.lua
 local SPEC_DEMONHUNTER_DEVOURER = _G.SPEC_DEMONHUNTER_DEVOURER or 3
 local SPEC_MAGE_ARCANE = _G.SPEC_MAGE_ARCANE or 1
@@ -125,15 +121,19 @@ local function GetGenericPowerColor(element, powerType)
 	return element.__owner.colors.power[powerType]
 end
 
-local function GetComboPoints(unit)
-	if(GetTargetComboPoints) then
-		return GetTargetComboPoints(unit, 'target')
+local GetComboPointsPower
+if(GameCompatibility.Warlords) then
+	function GetComboPointsPower(unit)
+		return UnitPower(unit, Enum.PowerType.ComboPoints), GetUnitChargedPowerPoints(unit)
 	end
-
-	return UnitPower(unit, Enum.PowerType.ComboPoints), GetUnitChargedPowerPoints(unit)
+else
+	function GetComboPointsPower(unit)
+		-- combo points are tied to the target unit before 6.x
+		return GetComboPoints(unit, 'target')
+	end
 end
 
-local function GetComboPointsMax(unit)
+local function GetComboPointsPowerMax(unit)
 	return UnitPowerMax(unit, Enum.PowerType.ComboPoints)
 end
 
@@ -181,7 +181,7 @@ if(playerClass == 'DEMONHUNTER' and GameCompatibility.Midnight) then
 	end
 elseif(playerClass == 'DRUID') then
 	GetPowerUpdaters = function()
-		return GetComboPoints, GetComboPointsMax, GetGenericPowerColor
+		return GetComboPointsPower, GetComboPointsPowerMax, GetGenericPowerColor
 	end
 
 	GetPowerInfo = function()
@@ -320,7 +320,7 @@ elseif(playerClass == 'PRIEST' and GameCompatibility.Mists and not GameCompatibi
 	end
 elseif(playerClass == 'ROGUE') then
 	GetPowerUpdaters = function()
-		return GetComboPoints, GetComboPointsMax, GetGenericPowerColor
+		return GetComboPointsPower, GetComboPointsPowerMax, GetGenericPowerColor
 	end
 
 	GetPowerInfo = function() -- might as well be static
@@ -454,6 +454,12 @@ end
 
 local function Update(self, event, unit, powerType)
 	local element = self.ClassPower
+	if(event == 'PLAYER_TARGET_CHANGED' or event == 'COMBO_TARGET_CHANGED') then
+		-- event does not have valid args, need to fake it
+		unit = UnitHasVehicleUI('player') and 'vehicle' or 'player'
+		powerType = STATE[element].powerType
+	end
+
 	if(not unit) then
 		return
 	elseif(unit == 'vehicle' and (powerType ~= POWER_TYPE_COMBO_POINTS or not UnitHasVehicleUI('player'))) then
@@ -539,10 +545,6 @@ local function Path(self, ...)
 	return (self.ClassPower.Override or Update) (self, ...)
 end
 
-local function TargetComboPointsPath(self, event)
-	return Path(self, event, UnitHasVehicleUI('player') and 'vehicle' or 'player', POWER_TYPE_COMBO_POINTS)
-end
-
 local function Visibility(self, event, unit)
 	local element = self.ClassPower
 	local powerType, powerID, isAuraPower
@@ -578,7 +580,7 @@ local function Visibility(self, event, unit)
 
 	if(shouldEnable) then
 		if(unit == 'vehicle') then
-			GetPower, GetPowerMax, GetPowerColor = GetComboPoints, GetComboPointsMax, GetGenericPowerColor
+			GetPower, GetPowerMax, GetPowerColor = GetComboPointsPower, GetComboPointsPowerMax, GetGenericPowerColor
 		else
 			GetPower, GetPowerMax, GetPowerColor = GetPowerUpdaters()
 		end
@@ -643,12 +645,15 @@ do
 
 		self:RegisterEvent('SPELLS_CHANGED', ColorPath, true)
 
-		local element = self.ClassPower
-		if(GetTargetComboPoints and STATE[element].powerType == POWER_TYPE_COMBO_POINTS) then
-			self:RegisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath, true)
-			self:RegisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath, true)
+		if(not GameCompatibility.Warlords) then
+			-- combo points are tied to the target before 6.x, so we need to
+			-- update the element whenever the target changes
+			self:RegisterEvent('PLAYER_TARGET_CHANGED', Path, true)
+			-- as Blizzard's Classic/ComboFrame.lua
+			self:RegisterEvent('COMBO_TARGET_CHANGED', Path, true)
 		end
 
+		local element = self.ClassPower
 		STATE[element].enabled = true
 
 		if(UnitHasVehicleUI('player')) then
@@ -665,8 +670,8 @@ do
 		self:UnregisterEvent('UNIT_MAXPOWER', Path)
 		self:UnregisterEvent('UNIT_POWER_POINT_CHARGE', Path)
 		self:UnregisterEvent('SPELLS_CHANGED', ColorPath)
-		self:UnregisterEvent('PLAYER_TARGET_CHANGED', TargetComboPointsPath)
-		self:UnregisterEvent('COMBO_TARGET_CHANGED', TargetComboPointsPath)
+		self:UnregisterEvent('PLAYER_TARGET_CHANGED', Path)
+		self:UnregisterEvent('COMBO_TARGET_CHANGED', Path)
 
 		if(not unregisterOnly) then
 			local element = self.ClassPower
